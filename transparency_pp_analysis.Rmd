@@ -1,0 +1,1248 @@
+---
+title: "Integrity, transparency, and accountability analysis"
+output:
+  html_document: default
+  pdf_document: default
+date: "`r Sys.Date()`"
+last edited by: Viktoriia Poltoratskaia
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 8)
+```
+
+This R Markdown document presents an initial draft of the analysis on integrity, transparency, and accountability. It is based on ProAct open data for Uruguay and Bulgaria, with Uruguay serving as the baseline example. Data from Bulgaria are incorporated in instances where key variables are missing from the Uruguayan dataset.The underlying code is more extensive and detailed than the outputs presented here.
+
+```{r, include=FALSE}
+# ========================================================================
+# Clear environment
+# ========================================================================
+
+rm(list = ls())
+
+# ========================================================================
+# Load packages
+# ========================================================================
+
+required_packages <- c(
+  
+  "data.table",
+  "tidyverse",  
+  "patchwork",
+  "corrr",
+  "giscoR",
+  "eurostat",
+  "sf",
+  "tidytext",   
+  "fixest",
+  "ggeffects",
+  "igraph",
+  "ggraph"
+)
+
+# Install missing packages (if any), without printing tons of messages
+installed <- rownames(installed.packages())
+to_install <- setdiff(required_packages, installed)
+
+if (length(to_install) > 0) {
+  install.packages(to_install)
+}
+
+# Load all required packages
+invisible(lapply(required_packages, library, character.only = TRUE))
+
+# ========================================================================
+# File paths
+# ========================================================================
+
+input_path_uy <- "C:/Users/wb589991/Downloads/UY_export.csv/UY_export.csv"
+input_path_bg <- "C:/Users/wb589991/Downloads/BG_export.csv/BG_export.csv"
+
+output_dir_uy <- "C:/Users/wb589991/Downloads/UY_export.csv"
+output_dir_bg <- "C:/Users/wb589991/Downloads/BG_export.csv"
+
+# ========================================================================
+# Open Uruguay data
+# ========================================================================
+
+uy_proact <- fread(
+  input           = input_path_uy,
+  keepLeadingZeros = TRUE,
+  encoding        = "UTF-8",
+  stringsAsFactors = FALSE,
+  showProgress    = TRUE,
+  na.strings      = c("", "-", "NA")
+)
+
+```
+
+The first step is to assess data completeness by examining missing values across all variables or a defined subset. Given the limited number of variables in the ProAct dataset, a full review can be efficiently conducted to identify any variables with significant underreporting. Each variable contributed to one of the ProAct indicators. 
+
+## Overall missing-value shares (Uruguay)
+
+```{r, include=FALSE}
+missing_shares <- uy_proact %>%
+  summarise(
+    across(
+      .cols  = !starts_with("ind_"),
+      .fns   = ~ mean(is.na(.)),
+      .names = "{.col}_missing_share"
+    )
+  )
+
+missing_shares_long <- missing_shares %>%
+  pivot_longer(
+    cols      = everything(),
+    names_to  = "variable",
+    values_to = "missing_share"
+  )
+
+# Quick plot with raw-ish variable names
+ggplot(
+  missing_shares_long,
+  aes(
+    x = reorder(
+      gsub("_", " ",
+           gsub("_missing_share", "", variable)
+      ),
+      missing_share
+    ),
+    y = missing_share
+  )
+) +
+  geom_col(fill = "lightblue") +
+  coord_flip() +
+  labs(
+    title = "Missing Value Share per Variable",
+    x     = "Variable",
+    y     = "Missing Share"
+  ) +
+  theme_minimal()
+
+
+# Label lookup for nicer axis labels -------------------------------------
+
+label_lookup <- c(
+  tender_id_missing_share                       = "Tender ID",
+  lot_number_missing_share                      = "Lot Number",
+  bid_number_missing_share                      = "Number of Bids",
+  tender_country_missing_share                  = "Tender Country",
+  tender_awarddecisiondate_missing_share        = "Award Decision Date",
+  tender_biddeadline_missing_share              = "Bid Deadline",
+  tender_proceduretype_missing_share            = "Procedure Type",
+  tender_nationalproceduretype_missing_share    = "National Procedure Type",
+  tender_supplytype_missing_share               = "Supply Type",
+  tender_publications_firstcallfortenderdate_missing_share =
+    "First Call for Tender Date",
+  source_missing_share                          = "Source",
+  buyer_masterid_missing_share                  = "Buyer Master ID",
+  buyer_id_missing_share                        = "Buyer ID",
+  buyer_name_missing_share                      = "Buyer Name",
+  buyer_buyertype_missing_share                 = "Buyer Type",
+  bidder_masterid_missing_share                 = "Bidder Master ID",
+  bidder_id_missing_share                       = "Bidder ID",
+  bidder_country_missing_share                  = "Bidder Country",
+  bidder_name_missing_share                     = "Bidder Name",
+  bid_price_missing_share                       = "Bid Price",
+  bid_priceusd_missing_share                    = "Bid Price (USD)",
+  bid_pricecurrency_missing_share               = "Bid Price Currency",
+  lot_productcode_missing_share                 = "Product Code",
+  lot_localproductcode_type_missing_share       = "Local Product Code Type",
+  lot_localproductcode_missing_share            = "Local Product Code",
+  submp_missing_share                           = "Submission Period",
+  decp_missing_share                            = "Decision Period",
+  is_capital_missing_share                      = "Capital City Indicator",
+  lot_title_missing_share                       = "Lot Title"
+)
+```
+
+Here is the output
+
+```{r}
+missing_plot <- ggplot(
+  missing_shares_long,
+  aes(
+    x = reorder(variable, missing_share),
+    y = missing_share
+  )
+) +
+  geom_col(fill = "lightblue") +
+  coord_flip() +
+  scale_x_discrete(
+    labels = function(x) {
+      out <- label_lookup[x]
+      out[is.na(out)] <- x[is.na(out)]
+      out
+    }
+  ) +
+  labs(
+    title = "Missing Value Share per Variable",
+    x     = "Variable",
+    y     = "Missing Share"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text  = element_text(size = 14)
+  )
+
+missing_plot
+
+ggsave(
+  filename = file.path(output_dir_uy, "missing_shares_plot.png"),
+  plot     = missing_plot,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+Overall data coverage is satisfactory; however, several variables exhibit high rates of missing values. The bidder country variable is missing in over 90% of records. Among reported cases, approximately 10,500 are bidders from Uruguay, with isolated entries from the United States, Argentina, and Georgia. Despite this, bidder name is consistently available, indicating that bidder information is generally captured, though location details are not.
+Submission and decision period variables also show high missing rates, primarily due to absent bid deadlines and tender calls. Additionally, about 17% of entries lack data for procedure type and product code. Subsequent analysis will examine whether these missing values are systematically associated with specific procedure types or buyers, as publication requirements may vary by procedure, and data availability could depend on the buyer’s reporting practices.
+
+## Missing shares by buyer type (Uruguay)
+```{r, include=FALSE}
+missing_by_buyer <- uy_proact %>%
+  mutate(
+    buyer_group = case_when(
+      grepl("(?i)national", buyer_buyertype) ~ "National Buyer",
+      grepl("(?i)regional", buyer_buyertype) ~ "Regional Buyer",
+      TRUE                                   ~ "Other Public Bodies"
+    )
+  ) %>%
+  group_by(buyer_group) %>%
+  summarise(
+    across(
+      .cols  = -starts_with("ind_"),
+      .fns   = ~ mean(is.na(.)),
+      .names = "{.col}_missing_share"
+    ),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols      = -buyer_group,
+    names_to  = "variable",
+    values_to = "missing_share"
+  ) %>%
+  mutate(
+    variable_label = ifelse(
+      variable %in% names(label_lookup),
+      unname(label_lookup[variable]),
+      variable
+    ),
+    buyer_group = factor(
+      buyer_group,
+      levels = c("National Buyer", "Regional Buyer", "Other Public Bodies")
+    )
+  )
+```
+
+Visualising
+
+```{r}
+missing_by_buyer_plot <- ggplot(
+  missing_by_buyer,
+  aes(
+    x    = buyer_group,
+    y    = variable_label,
+    fill = missing_share
+  )
+) +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(label = scales::percent(missing_share, accuracy = 1)),
+    size  = 3,
+    color = "black"
+  ) +
+  scale_fill_gradient(
+    name   = "Missing share",
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 1),
+    low    = "skyblue1",
+    high   = "indianred1"
+  ) +
+  labs(
+    title = "Missing value share per variable by buyer type",
+    x     = "Buyer type",
+    y     = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title  = element_text(size = 18, face = "bold"),
+    axis.title  = element_text(size = 14),
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12)
+  )
+
+missing_by_buyer_plot
+```
+
+## Top buyers with highest overall missing share (Uruguay)
+
+```{r, include=FALSE}
+top10_buyers_missing <- uy_proact %>%
+  select(!starts_with("ind_")) %>%
+  group_by(buyer_name, buyer_buyertype) %>%
+  filter(n() >= 100) %>%  # keep only buyers with at least 100 observations
+  summarise(
+    missing_share = mean(is.na(cur_data_all()), na.rm = TRUE),
+    .groups       = "drop"
+  ) %>%
+  arrange(desc(missing_share)) %>%
+  slice_head(n = 10) %>%
+  mutate(
+    buyer_label = paste0(
+      buyer_name, "\n(",
+      ifelse(is.na(buyer_buyertype), "Unknown Type", buyer_buyertype),
+      ")"
+    )
+  )
+```
+
+Visualising
+```{r}
+missing_buyers <- ggplot(
+  top10_buyers_missing,
+  aes(
+    x = reorder(buyer_label, missing_share),
+    y = missing_share
+  )
+) +
+  geom_col(fill = "skyblue1") +
+  geom_text(
+    aes(label = scales::percent(missing_share, accuracy = 0.1)),
+    hjust = -0.1,
+    size  = 4
+  ) +
+  coord_flip() +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    expand = expansion(mult = c(0, 0.1))
+  ) +
+  labs(
+    title = "Top 10 buyers with highest 
+    overall missing share",
+    x     = "Buyer",
+    y     = "Missing share"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title  = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, lineheight = 0.9)
+  )
+
+missing_buyers
+```
+
+National and other public bodies report a little less consistently than regional entities, particularly regarding deadlines and procedure types. The Ministry of Public Health and the Ministry of Sport show the highest levels of underreporting. Given their extensive procurement activities, including large infrastructure projects, improving disclosure of dates and procedure information would significantly strengthen transparency.
+
+```{r, include=FALSE}
+# ========================================================================
+# Combined buyer-type & top-buyer plots (Uruguay)
+# ========================================================================
+
+combined_plot <- missing_by_buyer_plot + missing_buyers +
+  plot_layout(nrow = 2)  # stacked (use nrow = 1 for side-by-side)
+
+combined_plot
+
+ggsave(
+  filename = file.path(output_dir_uy, "buyers_missing.png"),
+  plot     = combined_plot,
+  width    = 12,
+  height   = 12,
+  dpi      = 300
+)
+```
+## Missing shares by procedure type (Uruguay)
+
+```{r, include=FALSE}
+proc_type_labels <- c(
+  "OPEN"                   = "Open (competitive bidding)",
+  "RESTRICTED"             = "Restricted (limited bidding)",
+  "OUTRIGHT_AWARD"         = "Outright award (direct purchase)",
+  "OTHER"                  = "Other (special or exceptional procedures)",
+  "Missing procedure type" = "Missing procedure type"
+)
+
+missing_by_proc <- uy_proact %>%
+  mutate(
+    proc_group = ifelse(
+      is.na(tender_proceduretype),
+      "Missing procedure type",
+      as.character(tender_proceduretype)
+    )
+  ) %>%
+  group_by(proc_group) %>%
+  summarise(
+    across(
+      .cols  = -starts_with("ind_"),
+      .fns   = ~ mean(is.na(.)),
+      .names = "{.col}_missing_share"
+    ),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols      = -proc_group,
+    names_to  = "variable",
+    values_to = "missing_share"
+  ) %>%
+  mutate(
+    proc_group_label = ifelse(
+      proc_group %in% names(proc_type_labels),
+      proc_type_labels[proc_group],
+      proc_group
+    ),
+    variable_label = ifelse(
+      variable %in% names(label_lookup),
+      unname(label_lookup[variable]),
+      variable
+    ),
+    proc_group_label = factor(
+      proc_group_label,
+      levels = c(
+        "Open (competitive bidding)",
+        "Restricted (limited bidding)",
+        "Outright award (direct purchase)",
+        "Other (special or exceptional procedures)",
+        "Missing procedure type"
+      )
+    )
+  )
+```
+
+Visualising
+
+```{r}
+missing_by_proc_plot <- ggplot(
+  missing_by_proc,
+  aes(
+    x    = proc_group_label,
+    y    = variable_label,
+    fill = missing_share
+  )
+) +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(label = scales::percent(missing_share, accuracy = 1)),
+    size  = 3,
+    color = "black"
+  ) +
+  scale_fill_gradient(
+    name   = "Missing share",
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 1),
+    low    = "skyblue1",
+    high   = "indianred1"
+  ) +
+  labs(
+    title = "Missing value share per variable 
+    by procedure type",
+    x     = "Procedure Type",
+    y     = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title  = element_text(size = 18, face = "bold"),
+    axis.title  = element_text(size = 14),
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10)
+  )
+
+missing_by_proc_plot
+
+ggsave(
+  filename = file.path(output_dir_uy, "missing_by_proc_plot.png"),
+  plot     = missing_by_proc_plot,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+Some variables, such as bidder country and call for tender publication date are consistently missing across procedure types, suggesting they are not published regardless of reporting requirements. The procedure type missing values show the highest missing rate among core fields, including number of bids and dates. The cause of this gap is unclear, as procedure type is expected to be publicly available. Exceptional procedures follow a similar pattern, with all price-related fields missing, likely reflecting the nature of these procedures. Missing call for tender information for restricted procedures is also plausible, as only preselected bidders are invited, similar to direct awards. However, for open procedures, this information should be disclosed. The next step is to assess whether specific buyers systematically underreport these variables.
+
+## Correlation of missingness across variables (Uruguay) 
+```{r, include=FALSE}
+miss_matrix <- uy_proact %>%
+  select(!starts_with("ind_")) %>%
+  mutate(across(everything(), ~ as.numeric(is.na(.))))
+
+miss_corr <- correlate(miss_matrix)
+miss_corr
+
+miss_corr_long <- miss_corr %>%
+  stretch(na.rm = TRUE)
+
+corr_plot <- ggplot(
+  miss_corr_long,
+  aes(
+    x    = x,
+    y    = y,
+    fill = r
+  )
+) +
+  geom_tile() +
+  scale_fill_gradient2(
+    low      = "blue",
+    mid      = "white",
+    high     = "red",
+    midpoint = 0,
+    limits   = c(-1, 1)
+  ) +
+  coord_equal() +
+  labs(
+    title = "Correlation of NAs across variables",
+    x     = "Variable",
+    y     = "Variable",
+    fill  = "Correlation"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )
+
+corr_plot
+
+miss_corr_long %>%
+  filter(x != y) %>%
+  arrange(desc(abs(r))) %>%
+  slice_head(n = 20)
+```
+
+## Missing shares over time (by tender year, Uruguay)
+
+Analyzing missing values by year, quarter, or month helps identify whether underreporting stems from publication practices - for example, delays in updating recent records, platform transitions, or uneven reporting across periods.
+```{r, include=FALSE}
+uy_proact <- uy_proact %>%
+  mutate(
+    tender_year = coalesce(
+      str_extract(tender_publications_firstcallfortenderdate, "^\\d{4}"),
+      str_extract(tender_awarddecisiondate, "^\\d{4}"),
+      str_extract(tender_biddeadline, "^\\d{4}")
+    ),
+    tender_year = as.integer(tender_year)
+  )
+
+table(uy_proact$tender_year)
+
+missing_by_year <- uy_proact %>%
+  filter(!is.na(tender_year)) %>%
+  group_by(tender_year) %>%
+  summarise(
+    across(
+      .cols  = !starts_with("ind_"),
+      .fns   = ~ mean(is.na(.)),
+      .names = "{.col}_missing_share"
+    ),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols      = -tender_year,
+    names_to  = "variable",
+    values_to = "missing_share"
+  ) %>%
+  mutate(
+    variable_label = ifelse(
+      variable %in% names(label_lookup),
+      unname(label_lookup[variable]),
+      variable
+    )
+  )
+
+top_vars <- missing_by_year %>%
+  group_by(variable_label) %>%
+  summarise(
+    avg_missing = mean(missing_share, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  slice_max(avg_missing, n = 7) %>%
+  pull(variable_label)
+
+```
+Visualising
+```{r}
+year_miss <- missing_by_year %>%
+  filter(variable_label %in% top_vars) %>%
+  ggplot(
+    aes(
+      x     = tender_year,
+      y     = missing_share,
+      color = variable_label
+    )
+  ) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Trends in missing shares over time (top 7 variables)",
+    x     = "Year",
+    y     = "Missing share",
+    color = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title      = element_text(size = 18, face = "bold"),
+    legend.position = "bottom"
+  )
+
+year_miss
+
+ggsave(
+  filename = file.path(output_dir_uy, "year_miss.png"),
+  plot     = year_miss,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+In Uruguay, 2018 appears to be the last year of data updates. The highest missing rates occur in the initial year of publication when the transition to the online platform began and data were incomplete, and then again in 2018, likely reflecting partial publication during the final data upload.
+
+Not all of the key variables are present in Uruguay, so we use Bulgarian data to complement the examples with more populated dataset.
+```{r, include=FALSE}
+# ========================================================================
+# Open Bulgaria data
+# ========================================================================
+
+bg_proact <- fread(
+  input           = input_path_bg,
+  keepLeadingZeros = TRUE,
+  encoding        = "UTF-8",
+  stringsAsFactors = FALSE,
+  showProgress    = TRUE,
+  na.strings      = c("", "-", "NA")
+)
+
+table(bg_proact$buyer_nuts)
+
+# Ensure unique column names
+names(bg_proact) <- make.unique(names(bg_proact))
+```
+
+## Missing share by buyer location (BG, NUTS3)
+
+Analyzing missing values by region or municipality can reveal whether local buyers systematically underreport compared to national entities. While buyer location data are unavailable for Uruguay, Bulgaria illustrates the approach. Missing value shares vary little across NUTS3 regions (within four percentage points), with the outskirts of Sofia showing slightly lower reporting rates.
+
+```{r, include=FALSE}
+bg_proact <- bg_proact %>%
+  mutate(
+    buyer_nuts = as.character(buyer_nuts),
+    nuts_clean = buyer_nuts %>%
+      str_replace_all("\\[|\\]", "") %>%  # remove square brackets
+      str_replace_all('"', "") %>%        # remove double quotes
+      str_squish()                        # trim whitespace
+  ) %>%
+  mutate(
+    nuts_bg = if_else(str_detect(nuts_clean, "^BG"), nuts_clean, NA_character_),
+    nuts3 = if_else(
+      str_detect(nuts_bg, "^BG[0-9]{3}$"),
+      nuts_bg,
+      NA_character_
+    ),
+    nuts3 = if_else(nuts3 %in% c("BGZZZ", "00"), NA_character_, nuts3)
+  )
+
+table(bg_proact$buyer_nuts)
+table(bg_proact$nuts_clean)
+table(bg_proact$nuts3)
+
+nuts_summary <- bg_proact %>%
+  filter(!is.na(nuts3)) %>%
+  group_by(nuts3) %>%
+  summarise(
+    value   = n(),   # or mean(), sum(), etc.
+    .groups = "drop"
+  )
+
+missing_by_nuts <- bg_proact %>%
+  filter(!is.na(nuts3)) %>%
+  select(!starts_with("ind_")) %>%
+  group_by(nuts3) %>%
+  summarise(
+    missing_share = mean(is.na(cur_data_all()), na.rm = TRUE),
+    .groups       = "drop"
+  )
+
+bg_nuts3 <- get_eurostat_geospatial(
+  output_class = "sf",
+  nuts_level   = 3,
+  year         = 2021
+) %>%
+  filter(CNTR_CODE == "BG")
+
+bg_map_data <- bg_nuts3 %>%
+  left_join(missing_by_nuts, by = c("NUTS_ID" = "nuts3"))
+```
+Visualising
+```{r}
+bg_map <- ggplot(bg_map_data) +
+  geom_sf(aes(fill = missing_share), color = "grey40", size = 0.2) +
+  scale_fill_distiller(
+    palette   = "Blues",
+    direction = 1,
+    na.value  = "grey90",
+    labels    = scales::percent_format(accuracy = 1),
+    name      = "Missing share"
+  ) +
+  labs(
+    title = "Overall share of missing values by NUTS3 region (Bulgaria)"
+  ) +
+  theme_minimal()
+
+bg_map
+
+ggsave(
+  filename = file.path(output_dir_bg, "bg_map.png"),
+  plot     = bg_map,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+## Companies tax haven (FSI data) – TBD
+
+```{r, include=FALSE}
+# fsi_raw <- read.csv(
+#   "https://data.taxjustice.net/api/data/download?dataset=unilateral_cross&keys=iso3%2Ccountry_name&variables=fsi_2025_share%2Cfsi_2025_value%2Cfsi_2025_gsw%2Cfsi_2025_rank%2Cfsi_2025_score&format=csv&token=...",
+#   header = TRUE,
+#   stringsAsFactors = FALSE
+# )
+
+fsi <- fread(
+  "C:/Users/wb589991/Downloads/unilateral_cross (1).csv",
+  keepLeadingZeros = TRUE,
+  encoding         = "UTF-8",
+  stringsAsFactors = FALSE,
+  showProgress     = TRUE,
+  na.strings       = c("", "-", "NA")
+)
+
+```
+
+## Unusual supplier market entries by CPV cluster (Uruguay)
+
+We identify atypical market entry in public procurement by analyzing winners across CPV (Common Procurement Vocabulary) clusters and mapping statistically unusual cross-sector movements. First, we group contract awards by bidder and 3-digit CPV cluster and compute each bidder’s portfolio in that cluster (number and value of awards, and its share in the bidder’s total activity). We then restrict attention to bidders with sufficient history (≥4 awards or > 25th percentile) and flag “atypical” markets where a cluster represents less than 5 percent of the bidder’s portfolio and no more than three wins. In parallel, for every bidder–cluster pair we estimate the conditional probability of a bidder winning in that cluster, based on all awards in the market, and derive a surprise score (the negative log of this probability, standardized to a z-score). Each bidder’s “home market” is defined as the cluster where it wins the most awards; atypical wins in other clusters are treated as unusual entries. Aggregating these entries to the level of home-cluster → target-cluster pairs, we count how many distinct bidders make each move and compute the average standardized surprise. The resulting directed network of CPV clusters uses edge thickness to reflect the number of bidders involved and edge color to reflect the mean surprise level, highlighting markets and market pairs where cross-sector participation is unusually frequent and may warrant closer integrity and classification review.
+```{r, include=FALSE}
+# Starting from Uruguay data and defining CPV clusters ----------------------
+
+df_cpv <- uy_proact %>%
+  select(
+    tender_id,
+    lot_number,
+    bidder_id,
+    lot_productcode,  
+    bid_priceusd
+  ) %>%
+  mutate(
+    # coarse CPV cluster; you can change 3 to 2 or 4
+    cpv_cluster = str_sub(lot_productcode, 1, 3)
+  )
+# NOTE: if you want to restrict sample (years, buyer types, etc.),
+# filter df_cpv here so all stats use that filtered subset.
+
+
+# 1. CPV-cluster-level stats per bidder ----------------------------------
+
+bidder_cpv_stats <- df_cpv %>%
+  group_by(bidder_id, cpv_cluster) %>%
+  summarise(
+    n_awards    = n(),                                 # wins in this cluster
+    total_value = sum(bid_priceusd, na.rm = TRUE),     # value in this cluster
+    .groups     = "drop"
+  ) %>%
+  group_by(bidder_id) %>%
+  mutate(
+    bidder_total_awards = sum(n_awards),
+    bidder_total_value  = sum(total_value),
+    share_awards        = n_awards / bidder_total_awards,
+    share_value         = ifelse(
+      bidder_total_value > 0,
+      total_value / bidder_total_value,
+      NA_real_
+    )
+  ) %>%
+  ungroup()
+
+summary(bidder_cpv_stats$bidder_total_awards)
+
+
+# 2. Join stats back to df_cpv and flag atypical clusters ----------------
+
+df_with_flags <- df_cpv %>%
+  left_join(
+    bidder_cpv_stats %>%
+      select(
+        bidder_id,
+        cpv_cluster,
+        n_awards,
+        bidder_total_awards,
+        share_awards,
+        share_value
+      ),
+    by = c("bidder_id", "cpv_cluster")
+  ) %>%
+  mutate(
+    # enough_history is based on total awards of the bidder (within df_cpv)
+    enough_history   = bidder_total_awards >= 4,
+    cpv_cluster_atypical =
+      enough_history &                    # bidder has enough history
+      share_awards < 0.05 &               # cluster is marginal in portfolio
+      n_awards <= 3                       # and only a few wins in this cluster
+  )
+
+
+# 3. "Surprise" measure per (cluster, bidder) -----------------------------
+
+# Count wins per (cluster, supplier)
+cluster_supplier_counts <- df_cpv %>%
+  group_by(cpv_cluster, bidder_id) %>%
+  summarise(
+    n_ic   = n(),    # wins in this cluster for this bidder
+    .groups = "drop"
+  )
+
+# Total wins per cluster
+cluster_totals <- df_cpv %>%
+  group_by(cpv_cluster) %>%
+  summarise(
+    n_c          = n(),                         # total wins in cluster
+    n_suppliers_c = n_distinct(bidder_id),      # number of distinct bidders
+    .groups      = "drop"
+  )
+
+cluster_surprise <- cluster_supplier_counts %>%
+  left_join(cluster_totals, by = "cpv_cluster") %>%
+  mutate(
+    # P(i | c) with Laplace smoothing:
+    p_i_given_c   = (n_ic + 1) / (n_c + n_suppliers_c),
+    surprise_score = -log(p_i_given_c)
+  )
+
+df_with_surprise <- df_with_flags %>%
+  left_join(
+    cluster_surprise %>%
+      select(cpv_cluster, bidder_id, surprise_score),
+    by = c("cpv_cluster", "bidder_id")
+  ) %>%
+  mutate(
+    surprise_z = ifelse(
+      !is.na(surprise_score),
+      (surprise_score - mean(surprise_score, na.rm = TRUE)) /
+        sd(surprise_score, na.rm = TRUE),
+      NA_real_
+    )
+  )
+
+
+# 4. Build "home market" vs "target market" and aggregate -----------------
+
+# For each bidder, define their "home" CPV cluster (most awards)
+home_market <- bidder_cpv_stats %>%
+  group_by(bidder_id) %>%
+  slice_max(n_awards, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    bidder_id,
+    home_cpv_cluster = cpv_cluster
+  )
+
+df_unusual <- df_with_surprise %>%
+  left_join(home_market, by = "bidder_id") %>%
+  mutate(target_cpv_cluster = cpv_cluster) %>%
+  filter(
+    enough_history,          # bidder has enough data overall
+    cpv_cluster_atypical,    # cluster is marginal in their portfolio
+    !is.na(surprise_z)       # and we have a surprise measure
+  )
+
+unusual_matrix <- df_unusual %>%
+  group_by(home_cpv_cluster, target_cpv_cluster) %>%
+  summarise(
+    n_bidders    = n_distinct(bidder_id),        # how many bidders do this
+    n_awards     = n(),                          # how many lots like this
+    mean_surprise = mean(surprise_z, na.rm = TRUE),
+    .groups      = "drop"
+  )
+
+summary(unusual_matrix$n_bidders)
+```
+Visualising
+```{r}
+# 5. Network visualisation of unusual market entries ---------------------
+
+edges_markets <- unusual_matrix %>%
+  filter(n_bidders >= 4) %>%   # threshold to avoid “hairball” network
+  rename(
+    from = home_cpv_cluster,
+    to   = target_cpv_cluster
+  )
+
+g_markets <- graph_from_data_frame(edges_markets, directed = TRUE)
+
+uy_supp_net <- ggraph(g_markets, layout = "fr") +
+  geom_edge_link(
+    aes(width = n_bidders, colour = mean_surprise),
+    arrow   = arrow(length = grid::unit(0.15, "cm")),
+    end_cap = circle(2, "mm"),
+    alpha   = 0.6
+  ) +
+  geom_node_point(size = 4, colour = "darkorange") +
+  geom_node_text(aes(label = name), repel = TRUE, size = 3) +
+  scale_edge_width(range = c(0.2, 2)) +
+  scale_edge_colour_continuous(
+    low  = "green",
+    high = "red",
+    name = "Mean surprise score (standardised)"
+  ) +
+  labs(
+    title    = "Network of unusual market entries",
+    subtitle = "Nodes represent CPV clusters; edges show atypical flow of bidders between markets"
+  ) +
+  theme_void()
+
+uy_supp_net
+
+ggsave(
+  filename = file.path(output_dir_uy, "UY_supp_net.png"),
+  plot     = uy_supp_net,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+The dense central network of interconnected procurement clusters suggests a dynamic marketplace where firms actively participate in a range of related goods and services. However, the presence of several thick, red edges—indicating statistically atypical cross-sector movements—also points to potential vulnerabilities. These unusual entries may reflect either legitimate diversification or irregularities such as weak classification practices, strategic bidding, or limited enforcement of specialization standards. While the overall structure does not suggest systemic concentration or market capture, the data highlight the importance of monitoring outlier patterns, particularly in highly interconnected sectors like construction, maintenance, and professional services.
+
+
+## Buyer–supplier concentration (Uruguay)
+
+This analysis measures the share of a buyer’s total annual spending that goes to a single supplier. In other words, it examines how concentrated a buyer’s expenditures are among specific suppliers, focusing on the total value of contracts rather than the number of contracts.
+```{r, include=FALSE}
+buyer_supplier_conc <- uy_proact %>%
+  group_by(tender_year, buyer_masterid, bidder_masterid) %>%
+  summarise(
+    n_contracts = n(),
+    total_spend = sum(bid_priceusd, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  group_by(tender_year, buyer_masterid) %>%
+  mutate(
+    buyer_total_spend    = sum(total_spend, na.rm = TRUE),
+    buyer_total_contract = n(),
+    buyer_concentration  = ifelse(
+      buyer_total_spend > 0,
+      total_spend / buyer_total_spend,
+      NA_real_
+    )
+  ) %>%
+  ungroup()
+
+summary(buyer_supplier_conc$buyer_total_contract)
+
+buyer_supplier_conc <- buyer_supplier_conc %>%
+  group_by(tender_year, buyer_masterid) %>%
+  mutate(
+    n_suppliers                = n(),
+    buyer_concentration_display = ifelse(
+      n_suppliers < 3, NA_real_, buyer_concentration
+    )
+  ) %>%
+  ungroup() %>%
+  drop_na()
+
+top_buyers <- buyer_supplier_conc %>%
+  group_by(buyer_masterid) %>%
+  summarise(
+    max_conc        = max(buyer_concentration_display, na.rm = TRUE),
+    total_contracts = sum(n_contracts, na.rm = TRUE),
+    .groups         = "drop"
+  ) %>%
+  slice_max(max_conc, n = 50)
+
+```
+
+Visualising
+```{r}
+bc_overall <- ggplot(
+  top_buyers,
+  aes(
+    x = reorder(buyer_masterid, max_conc),
+    y = max_conc
+  )
+) +
+  geom_col(fill = "skyblue1") +
+  geom_text(
+    aes(label = total_contracts),
+    hjust = -0.1,
+    size  = 3.2
+  ) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title    = "Top 50 Buyers by Maximum Supplier Concentration",
+    subtitle = "Labels show total number of contracts procured by buyer",
+    x        = "Buyer ID",
+    y        = "Max Share of Spending to One Supplier"
+  ) +
+  ylim(0, 1.05)
+
+bc_overall
+
+ggsave(
+  filename = file.path(output_dir_uy, "bc_overall.png"),
+  plot     = bc_overall,
+  width    = 10,
+  height   = 8,
+  dpi      = 300
+)
+```
+
+## Buyer–supplier concentration by year (Uruguay)
+
+```{r, include=FALSE}
+top_buyers_yearly <- buyer_supplier_conc %>%
+  filter(tender_year > 2014) %>%
+  group_by(tender_year, buyer_masterid) %>%
+  summarise(
+    max_conc        = max(buyer_concentration_display, na.rm = TRUE),
+    total_contracts = sum(n_contracts, na.rm = TRUE),
+    .groups         = "drop"
+  ) %>%
+  group_by(tender_year) %>%
+  slice_max(max_conc, n = 30) %>%
+  ungroup()
+
+repeated_buyers <- top_buyers_yearly %>%
+  count(buyer_masterid) %>%
+  filter(n > 1) %>%
+  transmute(buyer_masterid, repeated = TRUE)
+
+top_buyers_yearly <- top_buyers_yearly %>%
+  left_join(repeated_buyers, by = "buyer_masterid") %>%
+  mutate(repeated = if_else(is.na(repeated), FALSE, repeated))
+
+```
+Visualising
+```{r}
+bc_yearly <- ggplot(
+  top_buyers_yearly,
+  aes(
+    x     = reorder_within(buyer_masterid, max_conc, tender_year),
+    y     = max_conc,
+    fill  = repeated
+  )
+) +
+  geom_col() +
+  geom_text(
+    aes(label = total_contracts, color = repeated),
+    hjust       = -0.1,
+    size        = 2.8,
+    show.legend = FALSE
+  ) +
+  coord_flip() +
+  facet_wrap(~ tender_year, scales = "free_y") +
+  scale_x_reordered() +
+  scale_fill_manual(
+    values = c(`FALSE` = "skyblue1", `TRUE` = "red"),
+    name   = "Buyer appears\nin multiple years",
+    labels = c("No", "Yes")
+  ) +
+  scale_color_manual(
+    values = c(`FALSE` = "black", `TRUE` = "red4")
+  ) +
+  theme_bw(base_size = 11) +
+  labs(
+    title    = "Top 30 Buyers by Maximum Spending Concentration per Year",
+    subtitle = "Red bars = buyers that appear in the top list in multiple years\nLabels show total number of contracts per year-buyer",
+    x        = "Buyer ID",
+    y        = "Max Share of Spending to One Supplier"
+  ) +
+  ylim(0, 1.05)
+
+bc_yearly
+
+ggsave(
+  filename = file.path(output_dir_uy, "bc_yearly.png"),
+  plot     = bc_yearly,
+  width    = 10,
+  height   = 8,
+  dpi      = 300
+)
+```
+In Uruguay, it appears that many buyers award nearly all (more than 75%) of their total contract value to the same supplier, and that multiple buyers do so consistently over several years. These cases require closer examination, as such a concentration of spending may indicate potentially suspicious relationships, although this depends on the type of tenders and the characteristics of the market.
+
+## Effect of non-transparency on competition (Uruguay)
+
+To examine the impact of non-transparent buyers on competition in the tenders they procure, a regression analysis was conducted at the buyer–year level, capturing variation within buyers over time. This regression includes additional control variables, such as the number of contracts per buyer–year and the total value of procured contracts.
+```{r, include=FALSE}
+buyer_missing_share <- uy_proact %>%
+  filter(tender_year > 2014) %>%
+  group_by(buyer_masterid, tender_year) %>%
+  summarise(
+    across(
+      .cols  = !starts_with("ind_"),
+      .fns   = ~ mean(is.na(.)),
+      .names = "{.col}_missing_share"
+    ),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    cumulative_missing_share = rowMeans(
+      across(ends_with("_missing_share")),
+      na.rm = TRUE
+    )
+  )
+
+buyer_singleb_rate <- uy_proact %>%
+  filter(tender_year > 2014) %>%
+  group_by(buyer_masterid, tender_year) %>%
+  summarise(
+    cumulative_singleb_rate = mean(ind_corr_singleb, na.rm = TRUE),
+    .groups                 = "drop"
+  )
+
+buyer_controls <- uy_proact %>%
+  group_by(buyer_masterid, tender_year) %>%
+  summarise(
+    n_contracts         = n(),
+    avg_contract_value  = mean(bid_priceusd, na.rm = TRUE),
+    total_contract_value = sum(bid_priceusd, na.rm = TRUE),
+    .groups             = "drop"
+  )
+
+buyer_analysis <- buyer_missing_share %>%
+  select(buyer_masterid, tender_year, cumulative_missing_share) %>%
+  inner_join(buyer_singleb_rate, by = c("buyer_masterid", "tender_year")) %>%
+  inner_join(buyer_controls, by = c("buyer_masterid", "tender_year"))
+
+model_buyer_year <- lm(
+  cumulative_singleb_rate ~ cumulative_missing_share +
+    log1p(n_contracts) +
+    log1p(avg_contract_value) +
+    factor(tender_year) +
+    factor(buyer_masterid),
+  data = buyer_analysis
+)
+
+summary(model_buyer_year)
+```
+Running model and visualising
+```{r}
+
+model_fe_uy <- feols(
+  cumulative_singleb_rate ~ cumulative_missing_share +
+    log1p(n_contracts) +
+    log1p(avg_contract_value) |
+    buyer_masterid + tender_year,
+  data = buyer_analysis
+)
+
+summary(model_fe_uy)
+
+pred_uy <- ggpredict(model_fe_uy, terms = "cumulative_missing_share")
+
+reg_uy <- ggplot(pred_uy, aes(x, predicted)) +
+  geom_line(size = 1.5, color = "lightblue") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(
+    title    = "Predicted Single-Bidding by Missing Share",
+    subtitle = "Fixed-effects model controlling for buyer and year",
+    x        = "Buyer Missing Share",
+    y        = "Predicted Single-Bidding Share",
+    caption  = "Note: The graph shows the predicted average share of single-bid tenders per buyer-year\nbased on a two-way fixed-effects model (buyer and year). Shaded area = 95% confidence interval."
+  ) +
+  theme_minimal(base_size = 20)
+
+reg_uy
+
+ggsave(
+  filename = file.path(output_dir_uy, "reg_singleb_missing_share.png"),
+  plot     = reg_uy,
+  width    = 10,
+  height   = 8,
+  dpi      = 300
+)
+```
+Based on this analysis, a higher proportion of missing data from buyers is associated with a higher share of single-bid tenders per buyer. When no information is missing, the predicted single-bidding share is around 64 (where the single-bidding indicator equals 100 when only one bid is submitted and 0 when multiple bids are submitted). This means that slightly more than half of all tenders receive only one bid. As the buyer’s missing data share increases to 0.4, the predicted single-bidding share rises to 78, indicating that more than three-quarters of all tenders receive only one bid when buyer information is absent in almost half of key fields.
+
+## Effect on relative price in BG
+
+Another way to assess the impact of missing information is to examine its effect on the relative price. The relative price is calculated as the final contract price divided by the estimated price. A value above 1 indicates that the tender did not receive a discount and resulted in a higher-than-estimated contract price, while a value below 1 suggests the presence of a discount. This effect can be analyzed at the contract level using a regression model that includes controls for year and number of bids, as well as buyer type controls over time.
+```{r, include=FALSE}
+key_vars <- names(label_lookup) %>%
+  gsub("_missing_share", "", .)
+
+bg_proact <- bg_proact %>%
+  mutate(
+    tender_year = coalesce(
+      str_extract(tender_publications_firstcallfortenderdate, "^\\d{4}"),
+      str_extract(tender_awarddecisiondate, "^\\d{4}"),
+      str_extract(tender_biddeadline, "^\\d{4}")
+    ),
+    tender_year = as.integer(tender_year)
+  )
+
+table(bg_proact$tender_year)
+
+bg_proact <- bg_proact %>%
+  mutate(
+    total_missing_share = rowMeans(
+      across(all_of(key_vars), ~ is.na(.)),
+      na.rm = TRUE
+    )
+  )
+
+bg_proact_reg <- bg_proact %>%
+  mutate(
+    relative_price = bid_price / lot_estimatedprice,
+    relative_price = ifelse(
+      relative_price > 5 | relative_price <= 0,
+      NA,
+      relative_price
+    )
+  ) %>%
+  filter(tender_year > 2011)
+
+bg_proact_reg <- bg_proact_reg %>%
+  mutate(
+    tender_proceduretype = relevel(as.factor(tender_proceduretype), ref = "OPEN"),
+    buyer_buyertype      = relevel(as.factor(buyer_buyertype), ref = "UTILITIES")
+  )
+```
+Running model and visualising
+```{r}
+model_lm_bg <- lm(
+  relative_price ~ total_missing_share +
+    buyer_buyertype +
+    tender_proceduretype +
+    as.factor(tender_year),
+  data = bg_proact_reg
+)
+
+summary(model_lm_bg)
+
+pred_bg <- ggpredict(model_lm_bg, terms = "total_missing_share")
+
+reg_bg <- ggplot(pred_bg, aes(x, predicted)) +
+  geom_line(size = 1.5, color = "lightblue") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(
+    title    = "Predicted Relative Price by Missing Share",
+    subtitle = "Controls included for procedure type, tender year, buyer type",
+    x        = "Total Missing Share",
+    y        = "Predicted Relative Price",
+    caption  = "Note: The graph shows the predicted relative price per contract.\nShaded area = 95% confidence interval."
+  ) +
+  theme_minimal(base_size = 20)
+
+reg_bg
+
+ggsave(
+  filename = file.path(output_dir_bg, "reg_relative_price_missing_share.png"),
+  plot     = reg_bg,
+  width    = 10,
+  height   = 8,
+  dpi      = 300
+)
+```
+Based on the analysis, a high proportion of missing values in key contract-level fields is associated with an increase in the relative price. When no information is missing, the predicted relative price is approximately 1.05 - close to the originally estimated price. However, when up to 20% of the data is missing, the predicted relative price rises to 1.13, indicating a tendency toward more overpriced contracts.
