@@ -1,0 +1,1083 @@
+---
+title: "Administrative efficiency"
+output:
+  html_document: default
+  pdf_document: default
+date: "`r Sys.Date()`"
+author: Viktoriia Poltoratskaia
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 8)
+```
+
+This R Markdown document presents an initial draft of the analysis on administrative efficiency. It is based on ProAct open data for Uruguay and Bulgaria, with Uruguay serving as the baseline example. Data from Bulgaria are incorporated in instances where key variables are missing from the Uruguayan dataset.The underlying code is more extensive and detailed than the outputs presented here.
+
+```{r, include=FALSE}
+# ========================================================================
+# Clear environment
+# ========================================================================
+
+rm(list = ls())
+
+# ========================================================================
+# Load packages
+# ========================================================================
+
+required_packages <- c(
+  
+  "data.table",
+  "tidyverse",  
+  "patchwork",
+  "corrr",
+  "giscoR",
+  "eurostat",
+  "sf",
+  "tidytext",   
+  "fixest",
+  "ggeffects",
+  "igraph",
+  "ggraph", 
+  "scales",
+  "ggrepel"
+)
+
+# Install missing packages (if any), without printing tons of messages
+installed <- rownames(installed.packages())
+to_install <- setdiff(required_packages, installed)
+
+if (length(to_install) > 0) {
+  install.packages(to_install)
+}
+
+# Load all required packages
+invisible(lapply(required_packages, library, character.only = TRUE))
+
+# ========================================================================
+# File paths
+# ========================================================================
+
+input_path_uy <- "C:/Users/wb589991/Downloads/UY_export.csv/UY_export.csv"
+input_path_bg <- "C:/Users/wb589991/Downloads/BG_export.csv/BG_export.csv"
+
+output_dir_uy <- "C:/Users/wb589991/Downloads/UY_export.csv"
+output_dir_bg <- "C:/Users/wb589991/Downloads/BG_export.csv"
+
+# ========================================================================
+# Open Uruguay and Bulgarian data
+# ========================================================================
+
+uy_proact <- fread(
+  input           = input_path_uy,
+  keepLeadingZeros = TRUE,
+  encoding        = "UTF-8",
+  stringsAsFactors = FALSE,
+  showProgress    = TRUE,
+  na.strings      = c("", "-", "NA")
+)
+bg_proact <- fread(
+  input           = input_path_bg,
+  keepLeadingZeros = TRUE,
+  encoding        = "UTF-8",
+  stringsAsFactors = FALSE,
+  showProgress    = TRUE,
+  na.strings      = c("", "-", "NA")
+)
+
+# Ensure unique column names
+names(bg_proact) <- make.unique(names(bg_proact))
+```
+
+## Share of procedure types by contract value
+
+```{r, include=FALSE}
+plot_data <- uy_proact %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"           = "Open Procedure",
+      "OUTRIGHT_AWARD" = "Direct Award",
+      "RESTRICTED"     = "Restricted Procedure",
+      "OTHER"          = "Other Procedures"
+    ),
+    # Add explicit label for missing cases
+    tender_proceduretype = fct_explicit_na(tender_proceduretype, na_level = "Missing value")
+  ) %>%
+  group_by(tender_proceduretype) %>%
+  summarise(
+    total_value   = sum(bid_priceusd, na.rm = TRUE),
+    n_contracts   = n()
+  ) %>%
+  mutate(
+    share_value     = total_value / sum(total_value),
+    share_contracts = n_contracts / sum(n_contracts)
+  )
+
+sh=ggplot(plot_data, aes(x = reorder(tender_proceduretype, share_value), y = share_value)) +
+  geom_col(aes(fill = tender_proceduretype), show.legend = FALSE, width = 0.6) +
+  geom_text(
+    aes(label = paste0(percent(share_value, accuracy = 0.1), 
+                       " (", dollar(total_value, scale = 1e-6, suffix = "M"), ")")),
+    hjust = -0.05, size = 4
+  ) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), expand = expansion(mult = c(0, 0.4))) +
+  scale_fill_brewer(palette = "Blues", direction = -1) +
+  coord_flip()+
+  labs(
+    title = "Share of contracts value",
+    x = NULL, y = "Share of total value",
+    caption = "Values in millions of USD"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.margin = margin(10, 30, 10, 10),
+    axis.text.y = element_text(size = 14)
+  )
+sh
+```
+
+
+```{r, include=FALSE}
+# Same for number of contracts
+
+p_count <- ggplot(plot_data, 
+                  aes(x = reorder(tender_proceduretype, share_value),  # same order as value
+                      y = share_contracts)) +
+  geom_col(aes(fill = tender_proceduretype), show.legend = FALSE, width = 0.6) +
+  geom_text(
+    aes(label = paste0(
+      percent(share_contracts, accuracy = 0.1),
+      " (", n_contracts, " contracts)"
+    )),
+    hjust = -0.05, size = 4
+  ) +
+  scale_y_continuous(labels = percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.4))) +
+  scale_fill_brewer(palette = "Blues", direction = -1) +
+  coord_flip() +
+  labs(
+    title = "Share of number of contracts",
+    x = NULL,
+    y = "Share of contracts"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.margin = margin(10, 30, 10, 0),
+    axis.text.y = element_text(size = 14)
+  )
+p_count
+```
+After the standardization process, three main types of non-missing procedures are present on Uruguay’s procurement platform: open procedures, restricted procedures, and direct awards.
+```{r}
+combined <- sh + p_count + plot_layout(ncol = 2)
+combined
+
+ggsave(
+  filename = file.path(output_dir_uy, "share_value_vs_contracts.png"),
+  plot     = combined,
+  width    = 19,
+  height   = 8,
+  dpi      = 300
+)
+```
+As shown, in terms of value share, the majority of non-missing contracts fall under the open procedure, followed by direct awards and restricted procedures. About 42% of contract values are missing information on the procedure type. However, when examining the number of contracts, the vast majority of records on the platform correspond to direct awards. This indicates that direct awards tend to have smaller values but make up most of the observations, whereas contracts with missing procedure information are few in number but large in value.
+
+##  Days between call for tender publication and bid deadline
+
+```{r, include=FALSE}
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_publications_firstcallfortenderdate = as.Date(tender_publications_firstcallfortenderdate),
+    tender_biddeadline = as.Date(tender_biddeadline)
+  ) %>%
+  filter(!is.na(tender_publications_firstcallfortenderdate), !is.na(tender_biddeadline)) %>%
+  mutate(
+    tender_days_open = as.numeric(tender_biddeadline - tender_publications_firstcallfortenderdate)
+  ) %>%
+  filter(tender_days_open >= 0 & tender_days_open<365)
+# Calculate quantiles
+q <- quantile(tender_periods$tender_days_open, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+
+```
+
+```{r}
+subm=ggplot(tender_periods, aes(x = tender_days_open)) +
+  geom_histogram(binwidth = 5, fill = "lightblue", color = "white", boundary = 0) +
+  geom_vline(
+    xintercept = q,
+    color = "blue",
+    linetype = c("dashed", "solid", "dashed"),
+    size = 1
+  ) +
+  annotate(
+    "text",
+    x = q,
+    y = Inf,
+    label = paste0(names(q), ": ", round(q, 1), " days"),
+    color = "blue",
+    size = 4,
+    angle = 45,
+    vjust = -1,
+    hjust = 0
+  ) +
+  coord_cartesian(xlim = c(0, 365), clip = "off") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
+  labs(
+    title = "Days for bid submission",
+    x = "Days between call opening and bid submission deadline",
+    y = "Number of tenders",
+    caption = "Vertical lines indicate the 25th, 50th (median), and 75th percentiles (quartiles)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title.position = "plot",
+    plot.title = element_text(margin = margin(b = 70)),
+    plot.caption = element_text(hjust = 0, face = "italic", size = 11, margin = margin(t = 15))
+  )
+subm
+
+ggsave(
+  filename = file.path(output_dir_uy, "subm.png"),
+  plot     = subm,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+##  Days between call for tender publication and bid deadline by procedure type
+
+```{r}
+tender_periods <- tender_periods %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+      
+    )
+  )%>%
+  drop_na(tender_proceduretype)
+
+# 1. Compute quartiles per procedure type
+q_by_proc <- tender_periods %>%
+  group_by(tender_proceduretype) %>%
+  summarise(
+    q25 = quantile(tender_days_open, 0.25, na.rm = TRUE),
+    q50 = quantile(tender_days_open, 0.50, na.rm = TRUE),
+    q75 = quantile(tender_days_open, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = starts_with("q"),
+    names_to = "quartile",
+    values_to = "xint"
+  ) %>%
+  mutate(
+    quartile_label = case_when(
+      quartile == "q25" ~ "25%",
+      quartile == "q50" ~ "50% (median)",
+      quartile == "q75" ~ "75%",
+      TRUE ~ quartile
+    ),
+    linetype = case_when(
+      quartile == "q50" ~ "solid",
+      TRUE              ~ "dashed"
+    )
+  )
+
+# 2. Faceted histogram with per-facet quartile lines & labels
+subm_proc_facet_q <- ggplot(tender_periods,
+                            aes(x = tender_days_open)) +
+  geom_histogram(
+    binwidth  = 5,
+    fill      = "lightblue",
+    color     = "white",
+    boundary  = 0
+  ) +
+  # Quartile lines per facet
+  geom_vline(
+    data  = q_by_proc,
+    aes(xintercept = xint, linetype = quartile_label),
+    color = "blue",
+    size  = 0.9
+  ) +
+  # Quartile labels per facet
+  geom_text_repel(
+    data = q_by_proc,
+    aes(
+      x = xint,
+      y = Inf,  # start at the top
+      label = paste0(quartile_label, ": ", round(xint, 1), " days")
+    ),
+    inherit.aes        = FALSE,
+    color              = "blue",
+    size               = 3.3,
+    angle              = 90,
+    vjust              = 1.2,       # a little above the top of the panel
+    min.segment.length = 0,
+    segment.color      = "blue",
+    box.padding        = 0.5,
+    direction          = "x",       # 👈 allow horizontal movement to avoid overlap
+    max.overlaps       = Inf        # don't drop labels
+  ) +
+  facet_wrap(~ tender_proceduretype, scales = "free_y") +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.25))
+    # 👆 adds 25% extra space above the tallest bar in each facet
+  ) +
+  coord_cartesian(clip = "off") +   # still needed so labels can go a bit out
+  scale_linetype_manual(
+    name   = NULL,
+    values = c(
+      "25%"           = "dashed",
+      "50% (median)"  = "solid",
+      "75%"           = "dashed"
+    )
+  ) +
+  labs(
+    title   = "Days for bid submission by procedure type",
+    x       = "Days between call opening and bid submission deadline",
+    y       = "Number of tenders",
+    caption = "Blue lines indicate the 25th, 50th (median), and 75th percentiles (quartiles) within each procedure type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title.position = "plot",
+    plot.title          = element_text(margin = margin(b = 20)),
+    plot.caption        = element_text(hjust = 0, face = "italic", size = 10,
+                                       margin = margin(t = 10)),
+    strip.text          = element_text(face = "bold"),
+    legend.position     = "none",
+    plot.margin         = margin(t = 20, r = 10, b = 10, l = 10)
+  )
+
+subm_proc_facet_q
+
+ggsave(
+  filename = file.path(output_dir_uy, "subm_proc_fac.png"),
+  plot     = subm_proc_facet_q,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+## Too short dates by procedure type
+
+```{r, include=FALSE}
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_publications_firstcallfortenderdate = as.Date(tender_publications_firstcallfortenderdate),
+    tender_biddeadline = as.Date(tender_biddeadline)
+  ) %>%
+  filter(
+    !is.na(tender_publications_firstcallfortenderdate),
+    !is.na(tender_biddeadline)
+  ) %>%
+  mutate(
+    tender_days_open = as.numeric(tender_biddeadline - tender_publications_firstcallfortenderdate)
+  ) %>%
+  filter(
+    tender_days_open >= 0,
+    tender_days_open < 365,
+    tender_proceduretype %in% c("OPEN", "RESTRICTED")
+  ) %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+    )
+  )
+tender_periods_labeled <- tender_periods %>%
+  mutate(
+    short_deadline = case_when(
+      tender_proceduretype == "Open Procedure"      & tender_days_open < 21 ~ TRUE,
+      tender_proceduretype == "Restricted Procedure" & tender_days_open < 14 ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    medium_deadline = case_when(
+      tender_proceduretype == "Open Procedure" & tender_days_open >= 21 & tender_days_open < 28 ~ TRUE,
+      TRUE ~ FALSE
+    )
+  )
+
+subm_r <- ggplot(tender_periods_labeled, aes(
+  x = tender_days_open,
+  fill = case_when(
+    tender_proceduretype == "Open Procedure"      & tender_days_open < 21 ~ "red",
+    tender_proceduretype == "Open Procedure"      & tender_days_open >= 21 & tender_days_open < 28 ~ "yellow",
+    tender_proceduretype == "Restricted Procedure" & tender_days_open < 14 ~ "red",
+    TRUE ~ "lightblue"
+  )
+)) +
+  geom_histogram(binwidth = 1, boundary = 0, colour = "white") +
+  facet_wrap(~ tender_proceduretype, scales = "free_y") +
+  scale_fill_identity() +
+  xlim(0, 60) +
+  labs(
+    x = "Days taken for the decision",
+    y = "Number of tenders",
+    title = "Distribution of tender open periods by procedure type",
+    subtitle = "Bars highlighted: red = short deadline (<15 days for open procedure; <10 for restricted); 
+    yellow = medium deadline (15-20 business days)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+
+# Add the text labels to your existing ggplot
+share_labels <- tender_periods_labeled %>%
+  group_by(tender_proceduretype) %>%
+  summarise(
+    share_short = mean(short_deadline) * 100,
+    .groups = "drop"
+  )
+```
+
+```{r}
+subm_r=subm_r +
+  geom_text(
+    data = share_labels,
+    aes(
+      x = 50, y = Inf,
+      label = paste0(
+        "Share of contracts 
+        with short deadlines: ",
+        round(share_short, 1), "%"
+      )
+    ),
+    vjust = 2, hjust = 1,
+    size = 4.5,
+    fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+subm_r
+
+ggsave(
+  filename = file.path(output_dir_uy, "subm_r.png"),
+  plot     = subm_r,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+## Shares by buyers
+
+```{r, include=FALSE}
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_publications_firstcallfortenderdate = as.Date(tender_publications_firstcallfortenderdate),
+    tender_biddeadline = as.Date(tender_biddeadline)
+  ) %>%
+  filter(
+    !is.na(tender_publications_firstcallfortenderdate),
+    !is.na(tender_biddeadline)
+  ) %>%
+  mutate(
+    tender_days_open = as.numeric(tender_biddeadline - tender_publications_firstcallfortenderdate)
+  ) %>%
+  filter(
+    tender_days_open >= 0,
+    tender_days_open < 365,
+    tender_proceduretype %in% c("OPEN", "RESTRICTED")
+  ) %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+    )
+  )
+
+tender_periods_labeled <- tender_periods %>%
+  mutate(
+    short_deadline = case_when(
+      tender_proceduretype == "Open Procedure"       & tender_days_open < 21 ~ TRUE,
+      tender_proceduretype == "Restricted Procedure" & tender_days_open < 14 ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    medium_deadline = case_when(
+      tender_proceduretype == "Open Procedure" &
+        tender_days_open >= 21 & tender_days_open < 28 ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    buyer_group = case_when(
+      grepl("(?i)national", buyer_buyertype) ~ "National Buyer",
+      grepl("(?i)regional", buyer_buyertype) ~ "Regional Buyer",
+      TRUE                                   ~ "Other Public Bodies"
+    )
+  )
+
+# --- 1) Shares by NUMBER of contracts (submission period) -------------------
+short_share_buyer_proc <- tender_periods_labeled %>%
+  group_by(buyer_group, tender_proceduretype) %>%
+  summarise(
+    share_short = mean(short_deadline, na.rm = TRUE),
+    n_tenders   = n(),
+    .groups = "drop"
+  )
+
+short_share_buyer_proc_long <- short_share_buyer_proc %>%
+  mutate(share_other = 1 - share_short) %>%
+  tidyr::pivot_longer(
+    cols = c(share_short, share_other),
+    names_to = "deadline_type",
+    values_to = "share"
+  )
+
+buyer_short <- ggplot(short_share_buyer_proc_long,
+                      aes(x = buyer_group,
+                          y = share,
+                          fill = deadline_type)) +
+  geom_col(position = "fill") +
+  geom_text(aes(label = scales::percent(share, accuracy = 1)),
+            position = position_fill(vjust = 0.5),
+            color = "white", size = 4, fontface = "bold") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(
+    values = c("share_short" = "tomato2", "share_other" = "steelblue2"),
+    labels = c("Short submission period", "Other submission periods")
+  ) +
+  facet_wrap(~ tender_proceduretype) +
+  labs(
+    x = "Buyer group",
+    y = "Share of tenders (100%)",
+    fill = NULL,
+    title = "Short tender submission periods\n(calculated in number of contracts)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+
+buyer_short
+
+
+# --- 2) Shares by VALUE of contracts (submission period) --------------------
+short_share_value_buyer_proc <- tender_periods_labeled %>%
+  group_by(buyer_group, tender_proceduretype) %>%
+  summarise(
+    total_value = sum(bid_priceusd, na.rm = TRUE),
+    short_value = sum(bid_priceusd[short_deadline %in% TRUE], na.rm = TRUE),
+    share_short = ifelse(total_value > 0, short_value / total_value, NA_real_),
+    n_contracts = n(),
+    .groups = "drop"
+  )
+
+short_share_value_buyer_proc_long <- short_share_value_buyer_proc %>%
+  mutate(share_other = 1 - share_short) %>%
+  tidyr::pivot_longer(
+    cols = c(share_short, share_other),
+    names_to = "deadline_type",
+    values_to = "share"
+  )
+
+buyer_short_v <- ggplot(short_share_value_buyer_proc_long,
+                        aes(x = buyer_group,
+                            y = share,
+                            fill = deadline_type)) +
+  geom_col(position = "fill") +
+  geom_text(aes(label = scales::percent(share, accuracy = 1)),
+            position = position_fill(vjust = 0.5),
+            color = "white", size = 4, fontface = "bold") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(
+    values = c("share_short" = "tomato2", "share_other" = "steelblue2"),
+    labels = c("Short submission period", "Other submission periods")
+  ) +
+  facet_wrap(~ tender_proceduretype) +
+  labs(
+    x = "Buyer group",
+    y = "Share of contract value (100%)",
+    fill = NULL,
+    title = "Short tender submission periods\n(calculated in value of contracts)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+
+buyer_short_v
+
+
+```
+
+```{r}
+# --- 3) Combined plot & save -----------------------------------------------
+combined_plot <- buyer_short + buyer_short_v +
+  plot_layout(nrow = 2)  # stacked; use nrow = 1 for side-by-side
+
+combined_plot
+
+ggsave(
+  filename = file.path(output_dir_uy, "short_submission_buyer.png"),
+  plot     = combined_plot,
+  width    = 12,
+  height   = 12,
+  dpi      = 300
+)
+```
+
+## Days between submission deadline and award date
+
+```{r}
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_biddeadline = as.Date(tender_biddeadline),
+    tender_awarddecisiondate = as.Date(tender_awarddecisiondate)
+  ) %>%
+  filter(!is.na(tender_biddeadline), !is.na(tender_awarddecisiondate)) %>%
+  mutate(
+    tender_days_dec = as.numeric(tender_awarddecisiondate - tender_biddeadline)
+  ) %>%
+  filter(tender_days_dec >= 0 & tender_days_dec<365)
+# Calculate quantiles
+q <- quantile(tender_periods$tender_days_dec, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+
+decp=ggplot(tender_periods, aes(x = tender_days_dec)) +
+  geom_histogram(binwidth = 5, fill = "lightblue", color = "white", boundary = 0) +
+  geom_vline(
+    xintercept = q,
+    color = "blue",
+    linetype = c("dashed", "solid", "dashed"),
+    size = 1
+  ) +
+  annotate(
+    "text",
+    x = q,
+    y = Inf,
+    label = paste0(names(q), ": ", round(q, 1), " days"),
+    color = "blue",
+    size = 4,
+    angle = 45,
+    vjust = -1,
+    hjust = 0
+  ) +
+  coord_cartesian(xlim = c(0, 365), clip = "off") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
+  labs(
+    title = "Days for award decision",
+    x = "Days between bid submission deadline and contract award",
+    y = "Number of tenders",
+    caption = "Vertical lines indicate the 25th, 50th (median), and 75th percentiles (quartiles)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title.position = "plot",
+    plot.title = element_text(margin = margin(b = 70)),
+    plot.caption = element_text(hjust = 0, face = "italic", size = 11, margin = margin(t = 15))
+  )
+decp
+
+ggsave(
+  filename = file.path(output_dir_uy, "decp.png"),
+  plot     = decp,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+## Days between submission deadline and award date by procedure type
+
+```{r, include=FALSE}
+tender_periods <- tender_periods %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+      
+    )
+  )%>%
+  drop_na(tender_proceduretype)
+
+# 1. Compute quartiles per procedure type
+q_by_proc <- tender_periods %>%
+  group_by(tender_proceduretype) %>%
+  summarise(
+    q25 = quantile(tender_days_dec, 0.25, na.rm = TRUE),
+    q50 = quantile(tender_days_dec, 0.50, na.rm = TRUE),
+    q75 = quantile(tender_days_dec, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = starts_with("q"),
+    names_to = "quartile",
+    values_to = "xint"
+  ) %>%
+  mutate(
+    quartile_label = case_when(
+      quartile == "q25" ~ "25%",
+      quartile == "q50" ~ "50% (median)",
+      quartile == "q75" ~ "75%",
+      TRUE ~ quartile
+    ),
+    linetype = case_when(
+      quartile == "q50" ~ "solid",
+      TRUE              ~ "dashed"
+    )
+  )
+```
+
+```{r}
+# 2. Faceted histogram with per-facet quartile lines & labels
+decp_proc_facet_q <- ggplot(tender_periods,
+                            aes(x = tender_days_dec)) +
+  geom_histogram(
+    binwidth  = 5,
+    fill      = "lightblue",
+    color     = "white",
+    boundary  = 0
+  ) +
+  # Quartile lines per facet
+  geom_vline(
+    data  = q_by_proc,
+    aes(xintercept = xint, linetype = quartile_label),
+    color = "blue",
+    size  = 0.9
+  ) +
+  # Quartile labels per facet
+  geom_text_repel(
+    data = q_by_proc,
+    aes(
+      x = xint,
+      y = Inf,  # start at the top
+      label = paste0(quartile_label, ": ", round(xint, 1), " days")
+    ),
+    inherit.aes        = FALSE,
+    color              = "blue",
+    size               = 3.3,
+    angle              = 90,
+    vjust              = 1.2,       # a little above the top of the panel
+    min.segment.length = 0,
+    segment.color      = "blue",
+    box.padding        = 0.5,
+    direction          = "x",       # 👈 allow horizontal movement to avoid overlap
+    max.overlaps       = Inf        # don't drop labels
+  ) +
+  facet_wrap(~ tender_proceduretype, scales = "free_y") +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.25))
+    # 👆 adds 25% extra space above the tallest bar in each facet
+  ) +
+  coord_cartesian(clip = "off") +   # still needed so labels can go a bit out
+  scale_linetype_manual(
+    name   = NULL,
+    values = c(
+      "25%"           = "dashed",
+      "50% (median)"  = "solid",
+      "75%"           = "dashed"
+    )
+  ) +
+  labs(
+    title = "Days for award decision",
+    x = "Days between bid submission deadline and contract award",
+    y       = "Number of tenders",
+    caption = "Blue lines indicate the 25th, 50th (median), and 75th percentiles (quartiles) within each procedure type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title.position = "plot",
+    plot.title          = element_text(margin = margin(b = 20)),
+    plot.caption        = element_text(hjust = 0, face = "italic", size = 10,
+                                       margin = margin(t = 10)),
+    strip.text          = element_text(face = "bold"),
+    legend.position     = "none",
+    plot.margin         = margin(t = 20, r = 10, b = 10, l = 10)
+  )
+
+decp_proc_facet_q
+
+ggsave(
+  filename = file.path(output_dir_uy, "decp_proc_fac.png"),
+  plot     = decp_proc_facet_q,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+## Too lengthy decisions by procedure type
+
+```{r, include = FALSE}
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_publications_firstcallfortenderdate = as.Date(tender_publications_firstcallfortenderdate),
+    tender_biddeadline = as.Date(tender_biddeadline)
+  ) %>%
+  filter(
+    !is.na(tender_publications_firstcallfortenderdate),
+    !is.na(tender_biddeadline)
+  ) %>%
+  mutate(
+    tender_days_dec = as.numeric(tender_biddeadline - tender_publications_firstcallfortenderdate)
+  ) %>%
+  filter(
+    tender_days_dec >= 0,
+    tender_days_dec < 365,
+    tender_proceduretype %in% c("OPEN", "RESTRICTED")
+  ) %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+    )
+  )
+
+decp_r=ggplot(tender_periods, aes(
+  x = tender_days_dec,
+  fill = case_when(
+    tender_proceduretype == "Open Procedure" & tender_days_dec > 56 ~ "red",
+    tender_proceduretype == "Restricted Procedure" & tender_days_dec >56 ~ "red",
+    TRUE ~ "lightblue"
+  )
+)) +
+  geom_histogram(binwidth = 4, boundary = 0, colour = "white") +
+  facet_wrap(~ tender_proceduretype, scales = "free_y") +
+  scale_fill_identity() +
+  xlim(0, 300) +  # <-- shorten the x-axis here
+  labs(
+    x = "Days between bid submission deadline and contract award",
+    y = "Number of tenders",
+    title = "Distribution of tender decision periods by procedure type",
+    subtitle = "Bars highlighted: red = > ~40 business days (or 56 regular days)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+decp_r
+# Compute share (percentage) of tenders with 56+ days per procedure type
+share_labels <- tender_periods %>%
+  group_by(tender_proceduretype) %>%
+  summarise(
+    share_56 = mean(tender_days_dec >= 56) * 100
+  )
+```
+
+```{r}
+# Add the text labels to your existing ggplot
+decp_r +
+  geom_text(
+    data = share_labels,
+    aes(
+      x = 200, y = Inf,
+      label = paste0("Share of contracts 
+                     with delayed decision: ", round(share_56, 1), "%")
+    ),
+    vjust = 2, hjust = 0.75,
+    size = 4.5,
+    fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+ggsave(
+  filename = file.path(output_dir_uy, "decp_r.png"),
+  plot     = decp_r,
+  width    = 10,
+  height   = 6,
+  dpi      = 300
+)
+```
+
+## Share of delayed decisions by buyer type 
+
+```{r, include=FALSE}
+# Starting from your tender_periods with tender_days_dec already computed ----
+tender_periods <- uy_proact %>%
+  mutate(
+    tender_publications_firstcallfortenderdate = as.Date(tender_publications_firstcallfortenderdate),
+    tender_biddeadline = as.Date(tender_biddeadline)
+  ) %>%
+  filter(
+    !is.na(tender_publications_firstcallfortenderdate),
+    !is.na(tender_biddeadline)
+  ) %>%
+  mutate(
+    tender_days_dec = as.numeric(tender_biddeadline - tender_publications_firstcallfortenderdate)
+  ) %>%
+  filter(
+    tender_days_dec >= 0,
+    tender_days_dec < 365,
+    tender_proceduretype %in% c("OPEN", "RESTRICTED")
+  ) %>%
+  mutate(
+    tender_proceduretype = recode(
+      tender_proceduretype,
+      "OPEN"            = "Open Procedure",
+      "OUTRIGHT_AWARD"  = "Direct Award",
+      "RESTRICTED"      = "Restricted Procedure",
+      "OTHER"           = "Other Procedures",
+      "COMPETITIVE_DIALOG" = "Competitive Dialog",
+      "NEGOTIATED" = "Negotiated",
+      "NEGOTIATED_WITHOUT_PUBLICATION" = "Negotiated without publications",
+      "NEGOTIATED_WITH_PUBLICATION" = "Negotiated with publications"
+    )
+  )
+
+# Label long vs. other decision periods & buyer groups -----------------------
+tender_periods_labeled_dec <- tender_periods %>%
+  mutate(
+    # long decision period: 56+ days
+    long_decision = case_when(
+      tender_proceduretype == "Open Procedure"       & tender_days_dec >= 56 ~ TRUE,
+      tender_proceduretype == "Restricted Procedure" & tender_days_dec >= 56 ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    buyer_group = case_when(
+      grepl("(?i)national", buyer_buyertype) ~ "National Buyer",
+      grepl("(?i)regional", buyer_buyertype) ~ "Regional Buyer",
+      TRUE                                   ~ "Other Public Bodies"
+    )
+  )
+
+# 1) Shares by NUMBER of contracts ------------------------------------------
+long_share_buyer_proc <- tender_periods_labeled_dec %>%
+  group_by(buyer_group, tender_proceduretype) %>%
+  summarise(
+    share_long = mean(long_decision, na.rm = TRUE),
+    n_tenders  = n(),
+    .groups = "drop"
+  )
+
+long_share_buyer_proc_long <- long_share_buyer_proc %>%
+  mutate(share_other = 1 - share_long) %>%
+  tidyr::pivot_longer(
+    cols = c(share_long, share_other),
+    names_to = "decision_type",
+    values_to = "share"
+  )
+
+buyer_long <- ggplot(long_share_buyer_proc_long,
+                     aes(x = buyer_group,
+                         y = share,
+                         fill = decision_type)) +
+  geom_col(position = "fill") +
+  geom_text(aes(label = scales::percent(share, accuracy = 1)),
+            position = position_fill(vjust = 0.5),
+            color = "white", size = 4, fontface = "bold") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(
+    values = c("share_long" = "tomato2", "share_other" = "steelblue2"),
+    labels = c("≥ 56 days", "< 56 days")
+  ) +
+  facet_wrap(~ tender_proceduretype) +
+  labs(
+    x = "Buyer group",
+    y = "Share of tenders (100%)",
+    fill = NULL,
+    title = "Long tender decision periods (≥ 56 days)\n(calculated in number of contracts)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+
+buyer_long
+
+
+# 2) Shares by VALUE of contracts -------------------------------------------
+long_share_value_buyer_proc <- tender_periods_labeled_dec %>%
+  group_by(buyer_group, tender_proceduretype) %>%
+  summarise(
+    total_value = sum(bid_priceusd, na.rm = TRUE),
+    long_value  = sum(bid_priceusd[long_decision %in% TRUE], na.rm = TRUE),
+    share_long  = ifelse(total_value > 0, long_value / total_value, NA_real_),
+    n_contracts = n(),
+    .groups = "drop"
+  )
+
+long_share_value_buyer_proc_long <- long_share_value_buyer_proc %>%
+  mutate(share_other = 1 - share_long) %>%
+  tidyr::pivot_longer(
+    cols = c(share_long, share_other),
+    names_to = "decision_type",
+    values_to = "share"
+  )
+
+buyer_long_v <- ggplot(long_share_value_buyer_proc_long,
+                       aes(x = buyer_group,
+                           y = share,
+                           fill = decision_type)) +
+  geom_col(position = "fill") +
+  geom_text(aes(label = scales::percent(share, accuracy = 1)),
+            position = position_fill(vjust = 0.5),
+            color = "white", size = 4, fontface = "bold") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(
+    values = c("share_long" = "tomato2", "share_other" = "steelblue2"),
+    labels = c("≥ 56 days", "< 56 days")
+  ) +
+  facet_wrap(~ tender_proceduretype) +
+  labs(
+    x = "Buyer group",
+    y = "Share of contract value (100%)",
+    fill = NULL,
+    title = "Long tender decision periods (≥ 56 days)\n(calculated in value of contracts)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+
+buyer_long_v
+```
+
+```{r}
+# 3) Combined plot (number vs value) ----------------------------------------
+combined_dec_plot <- buyer_long + buyer_long_v +
+  plot_layout(nrow = 2)  # stacked; use nrow = 1 for side-by-side
+
+combined_dec_plot
+
+ggsave(
+  filename = file.path(output_dir_uy, "long_decision_buyer.png"),
+  plot     = combined_dec_plot,
+  width    = 12,
+  height   = 12,
+  dpi      = 300
+)
+
+```
+
+
+
+
