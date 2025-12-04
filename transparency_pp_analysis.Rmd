@@ -4,7 +4,7 @@ output:
   html_document: default
   pdf_document: default
 date: "`r Sys.Date()`"
-last edited by: Viktoriia Poltoratskaia
+author: Viktoriia Poltoratskaia
 ---
 
 ```{r setup, include=FALSE}
