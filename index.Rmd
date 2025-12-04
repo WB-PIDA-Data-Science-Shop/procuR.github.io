@@ -21,7 +21,8 @@ The site is built with **R Markdown** and published automatically via **GitHub P
 This repository contains:
 
 - `index.Rmd` — this homepage  
-- `transparency_pp_analysis.Rmd` — analysis of public procurement transparency  
+- `transparency_pp_analysis.Rmd` — analysis of public procurement transparency 
+- `admin_efficiency.Rmd` — analysis of public procurement administrative efficiency
 - Supporting datasets, scripts, and rendered outputs (`.html`, `.tex`)
 
 All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.com/) package.
@@ -31,8 +32,8 @@ All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.
 ## 🔗 Quick Links
 
 - [Transparency Analysis](transparency_pp_analysis.html)
+- [Administrative Efficiency Analysis](admin_efficiency.html)
 - [GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io)
-- [World Bank PIDA Data Science Shop](https://worldbank.org)
 
 ---
 
