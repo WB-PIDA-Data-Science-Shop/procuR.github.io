@@ -31,7 +31,7 @@ All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.
 
 ## 🔗 Quick Links
 
-- [Transparency Analysis](transparency_pp_analysis.html)
+- [Integrity Analysis](integrity_report.html)
 - [Administrative Efficiency Analysis](admin_efficiency.html)
 - [GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io)
 
