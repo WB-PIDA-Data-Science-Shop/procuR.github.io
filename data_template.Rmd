@@ -1,0 +1,49 @@
+---
+title: "ProcuR data template"
+author: "Viktoriia Poltoratskaia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    df_print: paged
+---
+
+```{r, results='asis', echo=FALSE}
+library(readxl)
+library(DT)
+
+options(DT.options = list(pageLength = 25, scrollX = TRUE))
+
+# IMPORTANT: use a *relative* path inside your repo, not C:/...
+
+excel_file <- "data/public_procurement_data_dictionary.xlsx"
+sheets <- excel_sheets(excel_file)
+```
+
+```{r, results='asis', echo=FALSE}
+for (s in sheets) {
+
+# Section title
+
+cat("## ", s, "\n\n")
+
+# Read sheet
+
+df <- read_excel(excel_file, sheet = s)
+
+# Interactive table
+
+print(
+datatable(
+df,
+caption = paste("Sheet:", s),
+filter = "top"
+)
+)
+
+cat("\n\n")
+}
+
+```
+
