@@ -32,7 +32,7 @@ label_lookup <- c(
   tender_year_missing_share                                = "Tender Year",
   lot_number_missing_share                                 = "Lot Number",
   bid_number_missing_share                                 = "Number of Bids",
-  bid_iswinning_missing_share                              = "Winning Bid Indicator",
+  bid_iswinning_missing_share                              = "Winning Bid",
   tender_country_missing_share                             = "Tender Country",
   tender_awarddecisiondate_missing_share                   = "Award Decision Date",
   tender_contractsignaturedate_missing_share               = "Contract Signature Date",
@@ -258,7 +258,6 @@ plot_top_bar <- function(df, x_var, y_var, label_var,
 }
 
 # 9) Generic NUTS3 cleaning helper ---------------------------------------
-#    Assumes NUTS codes like "BG123", "RO321", etc. in buyer_nuts
 clean_nuts3 <- function(df, nuts_col = buyer_nuts) {
   nuts_quo <- rlang::enquo(nuts_col)
   

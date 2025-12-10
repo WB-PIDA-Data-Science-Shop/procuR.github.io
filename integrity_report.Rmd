@@ -1,7 +1,7 @@
 ---
 title: "Integrity, transparency, and accountability analysis"
 author: "Viktoriia Poltoratskaia"
-date: "2025-12-08"
+date: "`r Sys.Date()`"
 output:
   html_document:
     code_folding: hide   # or "show"
@@ -56,15 +56,15 @@ Requires manual filling
 
 | Field                          | Is available? | Type of data                               |
 |:-------------------------------|:-------------:|:-------------------------------------------|
-| Procurement plans              | Yes           | Scanned PDFs / xml / html / no information |
-| Call for tenders               | Yes           | Scanned PDFs / xml / html / no information |
-| Modification or cancellation   | Yes           | Scanned PDFs / xml / html / no information |
-| Announcement of awards         | Yes           | Scanned PDFs / xml / html / no information |
-| Details on contract signature  | Yes           | Scanned PDFs / xml / html / no information |
-| Implementation information     | No            | Scanned PDFs / xml / html / no information |
-| Framework agreement            | Yes           | Scanned PDFs / xml / html / no information |
-| Direct awards                  | No            | Scanned PDFs / xml / html / no information |
-| Subcontractors                 | Yes           | Scanned PDFs / xml / html / no information |
+| Procurement plans              | Yes/No        | Scanned PDFs / xml / html / no information |
+| Call for tenders               | Yes/No        | Scanned PDFs / xml / html / no information |
+| Modification or cancellation   | Yes/No        | Scanned PDFs / xml / html / no information |
+| Announcement of awards         | Yes/No        | Scanned PDFs / xml / html / no information |
+| Details on contract signature  | Yes/No        | Scanned PDFs / xml / html / no information |
+| Implementation information     | Yes/No        | Scanned PDFs / xml / html / no information |
+| Framework agreement            | Yes/No        | Scanned PDFs / xml / html / no information |
+| Direct awards                  | Yes/No        | Scanned PDFs / xml / html / no information |
+| Subcontractors                 | Yes/No        | Scanned PDFs / xml / html / no information |
 
 
 **Source:** National platform website
@@ -531,7 +531,7 @@ render_country_results("UY", results_list)
 ```
 
 ```{r show-utils, echo=FALSE, results='asis'}
-utils_path <- "C:/Users/wb589991/OneDrive - WBG/Documents/temp_inspect_repo/integrity_utils.R"
+utils_path <- "C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/integrity_utils.R"
 utils_code <- readLines(utils_path, warn = FALSE)
 cat('<details><summary><b>Show underlying code</b></summary>\n')
 cat('\n```r\n')
