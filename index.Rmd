@@ -37,6 +37,10 @@ All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.
 - [Economic Outcome Analysis](econ_out_report.html)
 - [GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io)
 
+
+
+- [Data Template](data_template.html)
+
 ---
 
 ## 📈 How to Reproduce Analyses
