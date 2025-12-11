@@ -39,7 +39,7 @@ All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.
 
 
 
-- [Data Template](data_template.html)
+- [Data Template](dataindex.html)
 
 ---
 

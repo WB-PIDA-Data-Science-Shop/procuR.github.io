@@ -474,7 +474,8 @@ admin_threshold_config <- tibble::tribble(
   
   "DEFAULT", 30, 30, 30, 30, 30, 60,
   "UY",      21, 14, 14, NA, 28, 56, #Specify here country deadlines. Consider that in law there are business days, and we calculalte actual days, so business days should be transformed to actual days first.
-  "BG",      30, 30, 30, 30, 30, NA
+  "BG",      30, 30, 30, 30, 30, NA,
+  "ID",      3, 3, NA, 3, 5, NA
 )
 
 
@@ -501,10 +502,12 @@ year_filter_config <- tibble::tribble(
   # default catch-all (no explicit filtering)
   "default",  "BG",          NA,       NA,
   "default",  "UY",          NA,       NA,
+  "default",  "ID",          NA,       NA,
   
   # component-specific overrides for single bidding
   "singleb",  "BG",          2011,     2018,
-  "singleb",  "UY",          2014,     NA
+  "singleb",  "UY",          2014,     NA,
+  "singleb",  "ID",          2012,     2018
 )
 
 # convenient helper: returns list(min_year, max_year)

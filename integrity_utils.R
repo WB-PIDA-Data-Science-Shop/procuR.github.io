@@ -345,11 +345,14 @@ year_filter_config <- tibble::tribble(
   # default catch-all
   "default",   "BG",          NA,        NA,
   "default",   "UY",          NA,        NA,
+  "default",   "ID",          NA,        NA,
   # component-specific overrides
   "singleb",   "BG",          2011,      2018,
   "singleb",   "UY",          2014,      NA,
+  "singleb",   "ID",          2014,      NA,
   "rel_price", "BG",          2011,      2018,
-  "rel_price", "UY",          2014,      NA
+  "rel_price", "UY",          2014,      NA,
+  "rel_price", "ID",          NA,      NA
 )
 
 
