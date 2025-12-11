@@ -68,7 +68,7 @@ load_packages(required_packages)
 
 ```{r multi-country-setup, include=FALSE}
 base_dir      <- "C:/Users/wb589991/Downloads"
-country_codes <- c("BG", "UY")   # <- add more here if needed: "BG", "UY", "RO", ...
+country_codes <- c("BG", "UY" ,"ID")   # <- add more here if needed: "BG", "UY", "RO", ...
 
 results_list <- map(country_codes, function(cc) {
   input_dir  <- file.path(base_dir, paste0(cc, "_export.csv"))
@@ -388,6 +388,12 @@ render_country_results("BG", results_list)
 
 ```{r country-UY, echo=FALSE, results='asis'}
 render_country_results("UY", results_list)
+```
+
+### Indonesia (ID)
+
+```{r country-ID, echo=FALSE, results='asis'}
+render_country_results("ID", results_list)
 ```
 
 ```{r show-utils, echo=FALSE, results='asis'}
