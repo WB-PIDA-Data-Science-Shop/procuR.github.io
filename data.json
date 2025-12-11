@@ -2937,4 +2937,2944 @@
       "Description": "Identifier type not provided or unclear in the data source."
     }
   ]
+=======
+{
+  "flattened_csv": [
+    {
+      "Variable": "persistent_id",
+      "Definition": "Unique row ID within the dataset. Calculated depending on the unit of observation with the use of tender-lot-bid unique pairs",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_award_criteria_text",
+      "Definition": "Criteria used to decide the winning bid, often based on price, quality, or both.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_award_deadline_date",
+      "Definition": "Latest date by which the tender must be awarded.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_award_decision_date",
+      "Definition": "Date when the decision on who wins the tender was made.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_bid_deadline_date",
+      "Definition": "Final date for submitting bids (or requests to participate in restricted/negotiated procedures).",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_cancel_date",
+      "Definition": "Date when the tender was cancelled or when the cancellation was officially published.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "filter, efficiency",
+      "Indicator priority": "medium"
+    },
+    {
+      "Variable": "tender_cancel_reason_text",
+      "Definition": "Official reason given for cancelling the tender.",
+      "Type": "date",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_contract_sign_date",
+      "Definition": "Date when the contract with the winning bidder was signed.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_is_modified_flag",
+      "Definition": "Were there modifications made to the tender after publication.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether there is meta-data avilable or old versions of calls",
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "filter (unless n of modifications is available)",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_country_code",
+      "Definition": "Country where the tender is issued, in ISO 3166 format (e.g., \"DE\" for Germany).",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_cpv_codes",
+      "Definition": "Common Procurement Vocabulary (CPV) codes describing the goods, services, or works being procured.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_main_cpv",
+      "Definition": "Main Common Procurement Vocabulary (CPV) code describing the goods, services, or works being procured.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_description_text",
+      "Definition": "Description of what the tender is for.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_economic_requirements_text",
+      "Definition": "Financial conditions the bidder must meet.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_eligibility_criteria_text",
+      "Definition": "Qualifications or requirements a bidder must meet to be eligible.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_est_completion_date",
+      "Definition": "Expected end date of the contract’s execution.",
+      "Type": "date",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_value",
+      "Definition": "Estimated total value of the tender.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_value_currency",
+      "Definition": "Currency of the estimated total value of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if currency is available at source",
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_start_date",
+      "Definition": "Expected start date of the tender or contract.",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_is_awarded_flag",
+      "Definition": "Whether the tender has been awarded to a bidder.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_central_procurement_flag",
+      "Definition": "Whether the tender is run by a central purchasing authority.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether the source is mentioned in the data or needs to be manually added",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_gpa_covered_flag",
+      "Definition": "Whether the tender is covered by the WTI framework agreement. See more: https://www.wto.org/english/tratop_e/gproc_e/gp_gpa_e.htm",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Most likely to be added manually based on the country status",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_dps_flag",
+      "Definition": "Whether the tender starts a Dynamic Purchasing System (DPS) or purchases via an existing DPS.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_e_invoice_flag",
+      "Definition": "Whether electronic invoicing will be accepted.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_e_auction_flag",
+      "Definition": "Whether the winner was chosen via an electronic auction.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_framework_flag",
+      "Definition": "Whether the tender is for a framework agreement (main or subsidiary).",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_joint_procurement_flag",
+      "Definition": "Whether multiple buyers jointly conduct the procurement.",
+      "Type": "boolean",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_on_behalf_flag",
+      "Definition": "Whether the purchase is made on behalf of another organization.",
+      "Type": "boolean",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_modification_reason_text",
+      "Definition": "Reason for modifying the tender.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_procedure_type_raw",
+      "Definition": "Type of national procurement procedure, as originally published (unstructured text).",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_on_behalf_orgs",
+      "Definition": "Organizations for which the purchase is made.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": "Should have identifiers for buyer bode",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_personnel_requirements_text",
+      "Definition": "Requirements related to the bidder’s personnel (e.g., qualifications, experience).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Definition": "Standardized type of procurement procedure.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_publication_url",
+      "Definition": "Tender announcement link.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Publication & Documentation",
+      "Indicator type / filter": "Transparency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_selection_method",
+      "Definition": "Method used to select the winner (lowest price or MEAT).",
+      "Type": "categorical",
+      "Required availability": "medium",
+      "Is calculated": true,
+      "Notes": "Should be enumerated and generated at the processing step",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "Transparency, efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Definition": "Goods, services, or works being procured.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_technical_requirements_text",
+      "Definition": "Technical specifications bidders must meet.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_year",
+      "Definition": "Year of the tender, calculated from the earliest available relevant date (e.g., award notice date, contract signature date).",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Could be calculated manually from other dates",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_title_text",
+      "Definition": "Official title of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_final_value",
+      "Definition": "Final value of the tender.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_final_value_currency",
+      "Definition": "Currency of the final value of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if currency is available at source",
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_implementation_address",
+      "Definition": "Address of the tender's implementation",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency. Filter, grouping",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_award_count",
+      "Definition": "Number of contract award publications related to a given tender.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if the data is available at source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_notice_count",
+      "Definition": "Number of call for tenders (or contract notice) publications related to a given tender.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if the data is available at source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_source",
+      "Definition": "Source of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_row_nr",
+      "Definition": "Sequential identifier for each lot within a tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_name_text",
+      "Definition": "Title or label of the lot.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Text indicators, filter, grouping",
+      "Indicator priority": "medium"
+    },
+    {
+      "Variable": "lot_status_raw",
+      "Definition": "Indicates the status of the lot as shows on the source",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_status_std",
+      "Definition": "Indicates the status of the lot (awarded, cancelled, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_bids_total_count",
+      "Definition": "Number of bids submitted for the lot.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "lot_bids_valid_count",
+      "Definition": "Number of valid (non-excluded) bids submitted.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_electronic_count",
+      "Definition": "Number of bids submitted electronically.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_sme_count",
+      "Definition": "Number of bids submitted by small and medium-sized enterprises (SMEs).",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_foreign_count",
+      "Definition": "Number of bids submitted by foreign companies.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_completion_date",
+      "Definition": "Most recent expected completion date for the lot.",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_duration_days_count",
+      "Definition": "Most recent contract duration (in days) for the lot.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_est_value",
+      "Definition": "Estimated value of the lot.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "lot_est_value_currency",
+      "Definition": "Currency of the estimated lot value.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_description_text",
+      "Definition": "Text description of the lot.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicator",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "bid_id",
+      "Definition": "Unique identified of the bid within dataset",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "bid_final_value",
+      "Definition": "Final bid price offered.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "High"
+    },
+    {
+      "Variable": "bid_final_value_currency",
+      "Definition": "Currency of the bid price.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "High"
+    },
+    {
+      "Variable": "bid_est_value",
+      "Definition": "Original (initial) bid price submitted.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_est_value_currency",
+      "Definition": "Currency of the original bid price.",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_winner_flag",
+      "Definition": "Indicator showing if the bid was the winning one.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_subcontracted_flag",
+      "Definition": "Indicator showing if subcontracting is planned.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_subcontract_share",
+      "Definition": "Proportion (%) of the contract expected to be subcontracted.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_consortium_flag",
+      "Definition": "Indicator showing if the bid was submitted by a consortium.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bidder_id",
+      "Definition": "Primary identifier of the bidder company unique for the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_id_type",
+      "Definition": "Type of supplier's ID (eg. Tax, bvd, national register, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether this data is available at the source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "bidder_master_id",
+      "Definition": "Standardized identifier assigned during processing (based on name, source IDs, address).",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_name",
+      "Definition": "Official name of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_region_code",
+      "Definition": "NUTS or other regional codes of the bidder.",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_city",
+      "Definition": "City where the bidder company is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_postcode",
+      "Definition": "Postal code of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_country",
+      "Definition": "Country where the bidder company is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_email",
+      "Definition": "Contact email address of the bidder company.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_address_raw",
+      "Definition": "Raw address of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_id",
+      "Definition": "Unique identifier of the buyer as published in the source data.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_master_id",
+      "Definition": "Standardized identifier assigned during processing (based on name, source ID, address).",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_name",
+      "Definition": "Official name of the buyer organization.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_region_code",
+      "Definition": "NUTS or other regional codes of the buyer (from source publication).",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
+      "Category": "Location",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_email",
+      "Definition": "Contact email address of the buyer.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_contact_name",
+      "Definition": "Name of the contact person at the buyer organization.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_contact_point",
+      "Definition": "General contact point for the buyer (e.g., department, office).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_city",
+      "Definition": "City where the buyer is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_country",
+      "Definition": "Country where the buyer is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_type_raw",
+      "Definition": "Type of buyer as it appears on the source",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Definition": "Type of buyer (e.g., national, regional, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_postcode",
+      "Definition": "Postal code of the buyer’s location.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_address_raw",
+      "Definition": "Raw address of the buyer's location.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "item_id",
+      "Definition": "Unique ID of the item within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "item_row_nr",
+      "Definition": "Sequential identifier for each item within a tender-lot.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "item_unit_currency",
+      "Definition": "EUR, USD",
+      "Type": "categorical",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_price_value",
+      "Definition": "Net price per unit, expressed in national currency.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_quantity",
+      "Definition": "Number of units.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_type_raw",
+      "Definition": "Type of unit used for pricing as appears on the source.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Definition": "Type of unit used for pricing (e.g., EUR/KG, EUR/L).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_description_text",
+      "Definition": "Description of the item as published.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "modification_id",
+      "Definition": "Unique identifier of the modification or amendment record.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "modification_reason_text",
+      "Definition": "Text  description explaining why the modification was made (e.g., price adjustment, extension of duration, technical change, correction of error)",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "modification_date",
+      "Definition": "Date when the modification was formally issued, signed, or published, depending on the data source",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "funding_value",
+      "Definition": "Monetary value of the contribution provided by the funding source, expressed in the tender or contract currency.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_program",
+      "Definition": "Name or classification of the funding program under which the procurement is financed (e.g., Operational Programme, EU Structural Fund, national co-financing scheme, etc).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_share",
+      "Definition": "Share or percentage of the total contract or project value financed by this funding source.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_source",
+      "Definition": "Name or identifier of the organization or body providing the funds (e.g., European Commission, national ministry, international donor).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "Indicators",
+      "Definition": NaN,
+      "Type": NaN,
+      "Required availability": NaN,
+      "Is calculated": NaN,
+      "Notes": NaN,
+      "Category": NaN,
+      "Indicator type / filter": NaN,
+      "Indicator priority": NaN
+    }
+  ],
+  "tender": [
+    {
+      "Variable": "persistent_id",
+      "Definition": "Unique row ID within the dataset. Calculated depending on the unit of observation with the use of tender-lot-bid unique pairs",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "tender_award_criteria_text",
+      "Definition": "Criteria used to decide the winning bid, often based on price, quality, or both.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_award_deadline_date",
+      "Definition": "Latest date by which the tender must be awarded.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_award_decision_date",
+      "Definition": "Date when the decision on who wins the tender was made.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_bid_deadline_date",
+      "Definition": "Final date for submitting bids (or requests to participate in restricted/negotiated procedures).",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_cancel_date",
+      "Definition": "Date when the tender was cancelled or when the cancellation was officially published.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "filter, efficiency",
+      "Indicator priority": "medium"
+    },
+    {
+      "Variable": "tender_cancel_reason_text",
+      "Definition": "Official reason given for cancelling the tender.",
+      "Type": "date",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_contract_sign_date",
+      "Definition": "Date when the contract with the winning bidder was signed.",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_is_modified_flag",
+      "Definition": "Were there modifications made to the tender after publication.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether there is meta-data avilable or old versions of calls",
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "filter (unless n of modifications is available)",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_country_code",
+      "Definition": "Country where the tender is issued, in ISO 3166 format (e.g., \"DE\" for Germany).",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_cpv_codes",
+      "Definition": "Common Procurement Vocabulary (CPV) codes describing the goods, services, or works being procured.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_main_cpv",
+      "Definition": "Main Common Procurement Vocabulary (CPV) code describing the goods, services, or works being procured.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_description_text",
+      "Definition": "Description of what the tender is for.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_economic_requirements_text",
+      "Definition": "Financial conditions the bidder must meet.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_eligibility_criteria_text",
+      "Definition": "Qualifications or requirements a bidder must meet to be eligible.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_est_completion_date",
+      "Definition": "Expected end date of the contract’s execution.",
+      "Type": "date",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_value",
+      "Definition": "Estimated total value of the tender.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_value_currency",
+      "Definition": "Currency of the estimated total value of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if currency is available at source",
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_est_start_date",
+      "Definition": "Expected start date of the tender or contract.",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_is_awarded_flag",
+      "Definition": "Whether the tender has been awarded to a bidder.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_central_procurement_flag",
+      "Definition": "Whether the tender is run by a central purchasing authority.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether the source is mentioned in the data or needs to be manually added",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_gpa_covered_flag",
+      "Definition": "Whether the tender is covered by the WTI framework agreement. See more: https://www.wto.org/english/tratop_e/gproc_e/gp_gpa_e.htm",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Most likely to be added manually based on the country status",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_dps_flag",
+      "Definition": "Whether the tender starts a Dynamic Purchasing System (DPS) or purchases via an existing DPS.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_e_invoice_flag",
+      "Definition": "Whether electronic invoicing will be accepted.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_e_auction_flag",
+      "Definition": "Whether the winner was chosen via an electronic auction.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_framework_flag",
+      "Definition": "Whether the tender is for a framework agreement (main or subsidiary).",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_joint_procurement_flag",
+      "Definition": "Whether multiple buyers jointly conduct the procurement.",
+      "Type": "boolean",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_is_on_behalf_flag",
+      "Definition": "Whether the purchase is made on behalf of another organization.",
+      "Type": "boolean",
+      "Required availability": "medium",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_modification_reason_text",
+      "Definition": "Reason for modifying the tender.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Modifications & Cancellations",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_procedure_type_raw",
+      "Definition": "Type of national procurement procedure, as originally published (unstructured text).",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_on_behalf_orgs",
+      "Definition": "Organizations for which the purchase is made.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": "Should have identifiers for buyer bode",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_personnel_requirements_text",
+      "Definition": "Requirements related to the bidder’s personnel (e.g., qualifications, experience).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Definition": "Standardized type of procurement procedure.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_publication_url",
+      "Definition": "Tender announcement link.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Publication & Documentation",
+      "Indicator type / filter": "Transparency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_selection_method",
+      "Definition": "Method used to select the winner (lowest price or MEAT).",
+      "Type": "categorical",
+      "Required availability": "medium",
+      "Is calculated": true,
+      "Notes": "Should be enumerated and generated at the processing step",
+      "Category": "Procedure & Process Type",
+      "Indicator type / filter": "Transparency, efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Definition": "Goods, services, or works being procured.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_technical_requirements_text",
+      "Definition": "Technical specifications bidders must meet.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": "Text field which could be further analyzed using text analysis methods",
+      "Category": "Requirements & Criteria",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_year",
+      "Definition": "Year of the tender, calculated from the earliest available relevant date (e.g., award notice date, contract signature date).",
+      "Type": "date",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Could be calculated manually from other dates",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_title_text",
+      "Definition": "Official title of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicators",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_final_value",
+      "Definition": "Final value of the tender.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_final_value_currency",
+      "Definition": "Currency of the final value of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if currency is available at source",
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "tender_implementation_address",
+      "Definition": "Address of the tender's implementation",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency. Filter, grouping",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "tender_award_count",
+      "Definition": "Number of contract award publications related to a given tender.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if the data is available at source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_notice_count",
+      "Definition": "Number of call for tenders (or contract notice) publications related to a given tender.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "depends if the data is available at source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_source",
+      "Definition": "Source of the tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter, grouping",
+      "Indicator priority": NaN
+    }
+  ],
+  "lot": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_row_nr",
+      "Definition": "Sequential identifier for each lot within a tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_name_text",
+      "Definition": "Title or label of the lot.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Text indicators, filter, grouping",
+      "Indicator priority": "medium"
+    },
+    {
+      "Variable": "lot_status_raw",
+      "Definition": "Indicates the status of the lot as shows on the source",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_status_std",
+      "Definition": "Indicates the status of the lot (awarded, cancelled, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_bids_total_count",
+      "Definition": "Number of bids submitted for the lot.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "lot_bids_valid_count",
+      "Definition": "Number of valid (non-excluded) bids submitted.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_electronic_count",
+      "Definition": "Number of bids submitted electronically.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_sme_count",
+      "Definition": "Number of bids submitted by small and medium-sized enterprises (SMEs).",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_bids_foreign_count",
+      "Definition": "Number of bids submitted by foreign companies.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_completion_date",
+      "Definition": "Most recent expected completion date for the lot.",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_duration_days_count",
+      "Definition": "Most recent contract duration (in days) for the lot.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Dates & Deadlines",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "lot_est_value",
+      "Definition": "Estimated value of the lot.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "high"
+    },
+    {
+      "Variable": "lot_est_value_currency",
+      "Definition": "Currency of the estimated lot value.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "lot_description_text",
+      "Definition": "Text description of the lot.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Text indicator",
+      "Indicator priority": "low"
+    }
+  ],
+  "bid": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "TRUE/FALSE",
+      "Notes": "Depends on whether there is a source ID",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "bid_id",
+      "Definition": "Unique identified of the bid within dataset",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "bid_final_value",
+      "Definition": "Final bid price offered.",
+      "Type": "numeric",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "High"
+    },
+    {
+      "Variable": "bid_final_value_currency",
+      "Definition": "Currency of the bid price.",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "High"
+    },
+    {
+      "Variable": "bid_est_value",
+      "Definition": "Original (initial) bid price submitted.",
+      "Type": "numeric",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_est_value_currency",
+      "Definition": "Currency of the original bid price.",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_winner_flag",
+      "Definition": "Indicator showing if the bid was the winning one.",
+      "Type": "boolean",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Filter",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_subcontracted_flag",
+      "Definition": "Indicator showing if subcontracting is planned.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_subcontract_share",
+      "Definition": "Proportion (%) of the contract expected to be subcontracted.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bid_is_consortium_flag",
+      "Definition": "Indicator showing if the bid was submitted by a consortium.",
+      "Type": "boolean",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Bidding & Participation",
+      "Indicator type / filter": "Competition / efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "bidder_id",
+      "Definition": "Primary identifier of the bidder company unique for the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_id_type",
+      "Definition": "Type of supplier's ID (eg. Tax, bvd, national register, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "Depends on whether this data is available at the source",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "bidder_master_id",
+      "Definition": "Standardized identifier assigned during processing (based on name, source IDs, address).",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_name",
+      "Definition": "Official name of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_region_code",
+      "Definition": "NUTS or other regional codes of the bidder.",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_city",
+      "Definition": "City where the bidder company is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_postcode",
+      "Definition": "Postal code of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_country",
+      "Definition": "Country where the bidder company is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_email",
+      "Definition": "Contact email address of the bidder company.",
+      "Type": "string",
+      "Required availability": "optional",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "bidder_address_raw",
+      "Definition": "Raw address of the bidder company.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    }
+  ],
+  "buyer": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_id",
+      "Definition": "Unique identifier of the buyer as published in the source data.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_master_id",
+      "Definition": "Standardized identifier assigned during processing (based on name, source ID, address).",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_name",
+      "Definition": "Official name of the buyer organization.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_region_code",
+      "Definition": "NUTS or other regional codes of the buyer (from source publication).",
+      "Type": "categorical",
+      "Required availability": "optional",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
+      "Category": "Location",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_email",
+      "Definition": "Contact email address of the buyer.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_contact_name",
+      "Definition": "Name of the contact person at the buyer organization.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_contact_point",
+      "Definition": "General contact point for the buyer (e.g., department, office).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Competition",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_city",
+      "Definition": "City where the buyer is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_country",
+      "Definition": "Country where the buyer is located.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_type_raw",
+      "Definition": "Type of buyer as it appears on the source",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Definition": "Type of buyer (e.g., national, regional, etc)",
+      "Type": "categorical",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "filter/grouping",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_postcode",
+      "Definition": "Postal code of the buyer’s location.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "buyer_address_raw",
+      "Definition": "Raw address of the buyer's location.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Location",
+      "Indicator type / filter": "Filter/grouping/competition/efficiency",
+      "Indicator priority": NaN
+    }
+  ],
+  "unit": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "TRUE/FALSE",
+      "Notes": "Depends on whether there is a source ID",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "item_id",
+      "Definition": "Unique ID of the item within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "item_row_nr",
+      "Definition": "Sequential identifier for each item within a tender-lot.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "item_unit_currency",
+      "Definition": "EUR, USD",
+      "Type": "categorical",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_price_value",
+      "Definition": "Net price per unit, expressed in national currency.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_quantity",
+      "Definition": "Number of units.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_type_raw",
+      "Definition": "Type of unit used for pricing as appears on the source.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Definition": "Type of unit used for pricing (e.g., EUR/KG, EUR/L).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": "Check enumeration",
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    },
+    {
+      "Variable": "item_description_text",
+      "Definition": "Description of the item as published.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Description & Scope",
+      "Indicator type / filter": "Efficiency",
+      "Indicator priority": "Low"
+    }
+  ],
+  "amendment": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "TRUE/FALSE",
+      "Notes": "Depends on whether there is a source ID",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "modification_id",
+      "Definition": "Unique identifier of the modification or amendment record.",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "modification_reason_text",
+      "Definition": "Text  description explaining why the modification was made (e.g., price adjustment, extension of duration, technical change, correction of error)",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "modification_date",
+      "Definition": "Date when the modification was formally issued, signed, or published, depending on the data source",
+      "Type": "date",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": NaN
+    }
+  ],
+  "funding": [
+    {
+      "Variable": "tender_id",
+      "Definition": "Unique ID of the tender within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "FALSE/TRUE",
+      "Notes": "This should be either a generated ID, or source id if there is one",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "tender_persistent_id",
+      "Definition": "Stable generated ID unique for tender.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": true,
+      "Notes": NaN,
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": NaN
+    },
+    {
+      "Variable": "lot_id",
+      "Definition": "Unique ID of the lot within the dataset.",
+      "Type": "string",
+      "Required availability": "minimum",
+      "Is calculated": "TRUE/FALSE",
+      "Notes": "Depends on whether there is a source ID",
+      "Category": "Identification & Basic Info",
+      "Indicator type / filter": "-",
+      "Indicator priority": "-"
+    },
+    {
+      "Variable": "funding_value",
+      "Definition": "Monetary value of the contribution provided by the funding source, expressed in the tender or contract currency.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_program",
+      "Definition": "Name or classification of the funding program under which the procurement is financed (e.g., Operational Programme, EU Structural Fund, national co-financing scheme, etc).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_share",
+      "Definition": "Share or percentage of the total contract or project value financed by this funding source.",
+      "Type": "numeric",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    },
+    {
+      "Variable": "funding_source",
+      "Definition": "Name or identifier of the organization or body providing the funds (e.g., European Commission, national ministry, international donor).",
+      "Type": "string",
+      "Required availability": "maximum",
+      "Is calculated": false,
+      "Notes": NaN,
+      "Category": "Prices & Funding",
+      "Indicator type / filter": "Efficiency, transparency",
+      "Indicator priority": "low"
+    }
+  ],
+  "enumeration": [
+    {
+      "Variable": "lot_status_std",
+      "Categories": "PLANNED",
+      "Description": "Lot is being prepared but not yet published or announced."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "ACTIVE",
+      "Description": "Lot is publicly announced and open for bids or negotiations."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "CANCELLED",
+      "Description": "Lot or procedure was cancelled before contract award."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "UNSUCCESSFUL",
+      "Description": "Lot received no valid bids or award decision was not made."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "AWARDED",
+      "Description": "Lot has been awarded to one or more suppliers."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "INTENT_TO_AWARD",
+      "Description": "Preliminary award decision or notice of intended award (e.g. in framework agreements)."
+    },
+    {
+      "Variable": "lot_status_std",
+      "Categories": "COMPLETED",
+      "Description": "Contract(s) for the lot were executed and fully completed/paid."
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Categories": "WORKS",
+      "Description": "Construction or civil engineering works."
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Categories": "SUPPLIES",
+      "Description": "Supply of goods, materials, or products."
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Categories": "SERVICES",
+      "Description": "Provision of services."
+    },
+    {
+      "Variable": "tender_supply_type",
+      "Categories": "OTHER",
+      "Description": "Type of supply not falling into the main three categories."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "OPEN",
+      "Description": "Open procedure where any supplier may submit a bid."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "RESTRICTED",
+      "Description": "Restricted procedure with pre-qualification of bidders."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "NEGOTIATED_WITH_PUBLICATION",
+      "Description": "Negotiated procedure with prior publication of a contract notice."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "NEGOTIATED_WITHOUT_PUBLICATION",
+      "Description": "Negotiated procedure without prior publication (direct award under exceptions)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "COMPETITIVE_DIALOGUE",
+      "Description": "Competitive dialogue procedure with discussions before final bids."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "INNOVATION_PARTNERSHIP",
+      "Description": "Procedure for development and purchase of innovative works, supplies or services."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "DESIGN_CONTEST",
+      "Description": "Procedure for design proposals, often used for architecture or planning."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "DPS_PURCHASE",
+      "Description": "Call-off under a dynamic purchasing system."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "FRAMEWORK_MINI_COMPETITION",
+      "Description": "Call-off or mini-tender under a framework agreement."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "DIRECT_AWARD",
+      "Description": "Direct contract award to one supplier."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "CONCESSION",
+      "Description": "Award of a concession contract where operator bears operational risk."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "PUBLIC_CONTEST",
+      "Description": "National-level open contest procedure (non-EU)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "NEGOTIATED",
+      "Description": "Generic negotiated procedure (national)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "APPROACHING_BIDDERS",
+      "Description": "Sealed-bid or invited competition (non-EU)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "ICB",
+      "Description": "International Competitive Bidding (World Bank)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "NCB",
+      "Description": "National Competitive Bidding (World Bank)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "DC",
+      "Description": "Direct Contracting (World Bank)."
+    },
+    {
+      "Variable": "tender_procedure_type_std",
+      "Categories": "OTHER",
+      "Description": "Procedure not classified under known categories."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "NATIONAL_AUTHORITY",
+      "Description": "Central government authority (e.g., ministry, department)."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "NATIONAL_AGENCY",
+      "Description": "Central government implementation or executive agency."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "REGIONAL_AUTHORITY",
+      "Description": "Subnational government authority (region, province, state)."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "REGIONAL_AGENCY",
+      "Description": "Regional or local implementation agency."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "PUBLIC_BODY",
+      "Description": "Publicly controlled entity not part of central/regional administration."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "UTILITIES",
+      "Description": "Utility operator in water, energy, transport, or postal services."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "EUROPEAN_AGENCY",
+      "Description": "European-level institution or agency."
+    },
+    {
+      "Variable": "buyer_type_std",
+      "Categories": "OTHER",
+      "Description": "Other or undefined type of contracting authority."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MTR",
+      "Description": "Metre (length)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "KMT",
+      "Description": "Kilometre (length)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MTK",
+      "Description": "Square metre (area)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "H27",
+      "Description": "Hectare (area)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "LTR",
+      "Description": "Litre (volume)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MLT",
+      "Description": "Millilitre (volume)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MTQ",
+      "Description": "Cubic metre (volume)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "GRM",
+      "Description": "Gram (mass)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "KGM",
+      "Description": "Kilogram (mass)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "TNE",
+      "Description": "Tonne (metric ton)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "HUR",
+      "Description": "Hour (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "DAY",
+      "Description": "Day (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MON",
+      "Description": "Month (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "ANN",
+      "Description": "Year (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "MIN",
+      "Description": "Minute (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "SEC",
+      "Description": "Second (time)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "C62",
+      "Description": "Piece / unit (count)."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "D64",
+      "Description": "Ration / package."
+    },
+    {
+      "Variable": "item_unit_type_std",
+      "Categories": "OTHER",
+      "Description": "Other or unspecified unit of measure."
+    },
+    {
+      "Variable": "bidder_country / buyer_country",
+      "Categories": "ISO country codes (e.g., AT, DE, FR, IT, etc.)",
+      "Description": "Two-letter ISO 3166-1 alpha-2 country code of bidder or buyer."
+    },
+    {
+      "Variable": "bidder_country / buyer_country",
+      "Categories": "XK",
+      "Description": "Kosovo (user-assigned ISO code, widely used)."
+    },
+    {
+      "Variable": "bidder_country / buyer_country",
+      "Categories": "ZZ",
+      "Description": "Unknown or not declared country."
+    },
+    {
+      "Variable": "bidder_country / buyer_country",
+      "Categories": "EU",
+      "Description": "European Union (regional code; optional derived category)."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "TAX_ID",
+      "Description": "National taxpayer identification number (TIN, VAT number, or fiscal code used for taxation)."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "ORGANIZATION_ID",
+      "Description": "Official organization identifier from a national register (e.g., company number, legal entity register code)."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "TRADE_REGISTER",
+      "Description": "Identifier issued by a commercial or trade register authority (e.g., Chamber of Commerce registration number)."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "BVD_ID",
+      "Description": "Bureau van Dijk ORBIS/AMADEUS unique identifier for legal entities, used in business databases."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "LEI",
+      "Description": "Legal Entity Identifier (ISO 17442-compliant global ID, 20-character alphanumeric)."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "OTHER",
+      "Description": "Other or unspecified type of organization identifier not covered above."
+    },
+    {
+      "Variable": "buyer_id_type / bidder_id_type",
+      "Categories": "UNKNOWN",
+      "Description": "Identifier type not provided or unclear in the data source."
+    }
+  ]
 }
