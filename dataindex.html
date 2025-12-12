@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Interactive Excel Viewer</title>
+  <title>Public Procurement Data Dictionary</title>
 
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -38,22 +38,76 @@
       border-color: #777;
       font-weight: 600;
     }
-    .sheet-table {
+
+    /* We hide/show the whole DataTables wrapper (table + controls) */
+    .sheet-wrapper {
       display: none;
     }
-    .sheet-table.active {
-      display: table;
+    .sheet-wrapper.active {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <h1>Excel Workbook Viewer</h1>
-  <p>Select a sheet below to explore the data (search, sort, paginate).</p>
-
+  <section>
+  <h2>Public Procurement Data Dictionary</h2>
+  <p>
+    The <strong>Public Procurement Data Dictionary</strong> includes the following components:
+  </p>
+  <ul>
+    <li>
+      <strong>flattened_csv</strong> – a consolidated version of all data fields merged into a single CSV file. 
+      This file can be used to perform comprehensive analyses.
+    </li>
+    <li>
+      <strong>tender</strong> – variables related to the tender level, including basic information such as 
+      the announcement date, procedure type, and source URL.
+    </li>
+    <li>
+      <strong>lot</strong> – all variables describing the lot level. 
+      By default, this serves as the primary unit of observation in the <code>flattened_csv</code>, 
+      with each lot corresponding to a contract.
+    </li>
+    <li>
+      <strong>bid</strong> – information on all bidders, including details about winning and losing bids. 
+      When filtering to include only winning bids in the <code>flattened_csv</code>, the dataset represents 
+      a contract-level observation, where the winning bid equals the contract price and bidder attributes 
+      describe the supplier.
+    </li>
+    <li>
+      <strong>buyer</strong> – variables describing the procuring agency responsible for the tender.
+    </li>
+    <li>
+      <strong>unit</strong> – fields providing more granular data on individual items within each lot, 
+      when such detail is available. In countries where this level of granularity is reported, 
+      items can serve as the unit of observation in the <code>flattened_csv</code>, though this 
+      level of detail is not always present.
+    </li>
+    <li>
+      <strong>amendment</strong> – data fields capturing any contract or tender modifications.
+    </li>
+    <li>
+      <strong>funding</strong> – variables describing the source(s) of funding for a tender, where applicable.
+    </li>
+    <li>
+  <strong>enumeration</strong> – an overview of categorical variables and their definitions. 
+  Currently, it is largely based on categories used in 
+  <a href="https://www.procurementintegrity.org/data" target="_blank" rel="noopener noreferrer">
+    ProAct datasets</a>.
+    </li>
+  </ul>
+  <p>
+    Each tab contains a unique identifier (<code>id</code>) that enables merging across datasets, 
+    depending on the appropriate level of observation. 
+    For example, <em>items</em> should be merged by <em>tender</em> and <em>lot</em>, 
+    while <em>buyers</em> only require the <em>tender_id</em>, 
+    since each tender has a single procuring agency responsible for all its lots.
+  </p>
+</section>
   <!-- Where sheet buttons will go -->
   <div id="tabs"></div>
 
-  <!-- Where sheet tables will go -->
+  <!-- Where sheet tables will go (wrappers will be inserted here) -->
   <div id="tables"></div>
 
   <script>
@@ -81,7 +135,7 @@
           const tableId = btn.dataset.target;
           const table = document.createElement('table');
           table.id = tableId;
-          table.className = 'display sheet-table';
+          table.className = 'display';
           table.style.width = '100%';
           tablesDiv.appendChild(table);
 
@@ -111,30 +165,34 @@
           table.appendChild(tbody);
 
           // Initialize DataTables after it's in the DOM
-          $(table).DataTable();
+          const dt = $(table).DataTable();
+
+          // Get the DataTables "wrapper" div (contains table + controls)
+          const wrapper = dt.table().container();
+          wrapper.classList.add('sheet-wrapper');
 
           // Make first sheet active by default
           if (firstSheet) {
             btn.classList.add('active');
-            table.classList.add('active');
+            wrapper.classList.add('active');
             firstSheet = false;
           }
 
           // Tab button click handler
           btn.addEventListener('click', () => {
-            // Deactivate all
+            // Deactivate all tabs and wrappers
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.sheet-table').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sheet-wrapper').forEach(w => w.classList.remove('active'));
 
             // Activate this one
             btn.classList.add('active');
-            table.classList.add('active');
+            wrapper.classList.add('active');
           });
         });
       })
       .catch(err => {
         console.error('Error loading data.json:', err);
-        alert('Could not load data.json. Make sure it is in the same folder as index.html.');
+        alert('Could not load data.json. Make sure it is in the same folder as dataindex.html.');
       });
   </script>
 </body>
