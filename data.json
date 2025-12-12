@@ -28,7 +28,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -50,7 +50,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -61,7 +61,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -72,7 +72,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -83,7 +83,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "filter, efficiency",
       "Indicator priority": "medium"
@@ -97,7 +97,7 @@
       "Notes": "Text field which could be further analyzed using text analysis methods",
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_contract_sign_date",
@@ -105,7 +105,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -119,7 +119,7 @@
       "Notes": "Depends on whether there is meta-data avilable or old versions of calls",
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "filter (unless n of modifications is available)",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_country_code",
@@ -127,10 +127,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_cpv_codes",
@@ -138,10 +138,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_main_cpv",
@@ -149,10 +149,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_description_text",
@@ -160,14 +160,14 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
     },
     {
       "Variable": "tender_economic_requirements_text",
-      "Definition": "Financial conditions the bidder must meet.",
+      "Definition": "Finullcial conditions the bidder must meet.",
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
@@ -193,7 +193,7 @@
       "Type": "date",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -204,7 +204,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -226,7 +226,7 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -237,10 +237,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_central_procurement_flag",
@@ -251,7 +251,7 @@
       "Notes": "Depends on whether the source is mentioned in the data or needs to be manually added",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_gpa_covered_flag",
@@ -262,7 +262,7 @@
       "Notes": "Most likely to be added manually based on the country status",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_dps_flag",
@@ -270,10 +270,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_e_invoice_flag",
@@ -281,10 +281,10 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_e_auction_flag",
@@ -292,10 +292,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_framework_flag",
@@ -303,10 +303,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_joint_procurement_flag",
@@ -314,10 +314,10 @@
       "Type": "boolean",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_on_behalf_flag",
@@ -325,10 +325,10 @@
       "Type": "boolean",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_modification_reason_text",
@@ -336,7 +336,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -347,10 +347,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_on_behalf_orgs",
@@ -369,7 +369,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Requirements & Criteria",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -383,7 +383,7 @@
       "Notes": "Check enumeration",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_publication_url",
@@ -391,7 +391,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Publication & Documentation",
       "Indicator type / filter": "Transparency",
       "Indicator priority": "high"
@@ -413,10 +413,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_technical_requirements_text",
@@ -438,7 +438,7 @@
       "Notes": "Could be calculated manually from other dates",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_title_text",
@@ -446,7 +446,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -457,7 +457,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -479,7 +479,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency. Filter, grouping",
       "Indicator priority": "low"
@@ -493,7 +493,7 @@
       "Notes": "depends if the data is available at source",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_notice_count",
@@ -504,7 +504,7 @@
       "Notes": "depends if the data is available at source",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_source",
@@ -512,10 +512,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -534,7 +534,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -545,7 +545,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Text indicators, filter, grouping",
       "Indicator priority": "medium"
@@ -556,7 +556,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter",
       "Indicator priority": "-"
@@ -578,7 +578,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "high"
@@ -589,7 +589,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -600,7 +600,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -611,7 +611,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -622,7 +622,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -633,7 +633,7 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "low"
@@ -644,7 +644,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "low"
@@ -655,7 +655,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -666,7 +666,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -677,7 +677,7 @@
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicator",
       "Indicator priority": "low"
@@ -699,7 +699,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "High"
@@ -710,7 +710,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "High"
@@ -721,7 +721,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -732,7 +732,7 @@
       "Type": "categorical",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -743,7 +743,7 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Filter",
       "Indicator priority": "Low"
@@ -754,7 +754,7 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -765,7 +765,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -776,7 +776,7 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -787,10 +787,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_id_type",
@@ -809,10 +809,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_name",
@@ -820,10 +820,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_region_code",
@@ -834,7 +834,7 @@
       "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_city",
@@ -842,10 +842,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_postcode",
@@ -853,10 +853,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_country",
@@ -864,10 +864,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_email",
@@ -875,10 +875,10 @@
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_address_raw",
@@ -886,10 +886,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_id",
@@ -900,7 +900,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_master_id",
@@ -908,10 +908,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_name",
@@ -919,10 +919,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_region_code",
@@ -933,7 +933,7 @@
       "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
       "Category": "Location",
       "Indicator type / filter": "Efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_email",
@@ -941,10 +941,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_contact_name",
@@ -952,10 +952,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Competition",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_contact_point",
@@ -963,10 +963,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Competition",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_city",
@@ -974,10 +974,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_country",
@@ -985,10 +985,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_type_raw",
@@ -996,10 +996,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_type_std",
@@ -1010,7 +1010,7 @@
       "Notes": "Check enumeration",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_postcode",
@@ -1018,10 +1018,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_address_raw",
@@ -1029,10 +1029,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "item_id",
@@ -1051,7 +1051,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -1062,7 +1062,7 @@
       "Type": "categorical",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -1073,7 +1073,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -1084,7 +1084,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -1095,7 +1095,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -1117,7 +1117,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -1128,10 +1128,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "modification_reason_text",
@@ -1139,10 +1139,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency, transparency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "modification_date",
@@ -1150,10 +1150,10 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency, transparency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "funding_value",
@@ -1161,29 +1161,29 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
     },
     {
       "Variable": "funding_program",
-      "Definition": "Name or classification of the funding program under which the procurement is financed (e.g., Operational Programme, EU Structural Fund, national co-financing scheme, etc).",
+      "Definition": "Name or classification of the funding program under which the procurement is finullced (e.g., Operational Programme, EU Structural Fund, national co-finullcing scheme, etc).",
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
     },
     {
       "Variable": "funding_share",
-      "Definition": "Share or percentage of the total contract or project value financed by this funding source.",
+      "Definition": "Share or percentage of the total contract or project value finullced by this funding source.",
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
@@ -1194,21 +1194,21 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
     },
     {
       "Variable": "Indicators",
-      "Definition": NaN,
-      "Type": NaN,
-      "Required availability": NaN,
-      "Is calculated": NaN,
-      "Notes": NaN,
-      "Category": NaN,
-      "Indicator type / filter": NaN,
-      "Indicator priority": NaN
+      "Definition": null,
+      "Type": null,
+      "Required availability": null,
+      "Is calculated": null,
+      "Notes": null,
+      "Category": null,
+      "Indicator type / filter": null,
+      "Indicator priority": null
     }
   ],
   "tender": [
@@ -1240,7 +1240,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -1262,7 +1262,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1273,7 +1273,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1284,7 +1284,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1295,7 +1295,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "filter, efficiency",
       "Indicator priority": "medium"
@@ -1309,7 +1309,7 @@
       "Notes": "Text field which could be further analyzed using text analysis methods",
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_contract_sign_date",
@@ -1317,7 +1317,7 @@
       "Type": "date",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1331,7 +1331,7 @@
       "Notes": "Depends on whether there is meta-data avilable or old versions of calls",
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "filter (unless n of modifications is available)",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_country_code",
@@ -1339,10 +1339,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_cpv_codes",
@@ -1350,10 +1350,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_main_cpv",
@@ -1361,10 +1361,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_description_text",
@@ -1372,14 +1372,14 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
     },
     {
       "Variable": "tender_economic_requirements_text",
-      "Definition": "Financial conditions the bidder must meet.",
+      "Definition": "Finullcial conditions the bidder must meet.",
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
@@ -1405,7 +1405,7 @@
       "Type": "date",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1416,7 +1416,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1438,7 +1438,7 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1449,10 +1449,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_central_procurement_flag",
@@ -1463,7 +1463,7 @@
       "Notes": "Depends on whether the source is mentioned in the data or needs to be manually added",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_gpa_covered_flag",
@@ -1474,7 +1474,7 @@
       "Notes": "Most likely to be added manually based on the country status",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_dps_flag",
@@ -1482,10 +1482,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_e_invoice_flag",
@@ -1493,10 +1493,10 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_e_auction_flag",
@@ -1504,10 +1504,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_framework_flag",
@@ -1515,10 +1515,10 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_joint_procurement_flag",
@@ -1526,10 +1526,10 @@
       "Type": "boolean",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_is_on_behalf_flag",
@@ -1537,10 +1537,10 @@
       "Type": "boolean",
       "Required availability": "medium",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_modification_reason_text",
@@ -1548,7 +1548,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Modifications & Cancellations",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -1559,10 +1559,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_on_behalf_orgs",
@@ -1581,7 +1581,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Requirements & Criteria",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -1595,7 +1595,7 @@
       "Notes": "Check enumeration",
       "Category": "Procedure & Process Type",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_publication_url",
@@ -1603,7 +1603,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Publication & Documentation",
       "Indicator type / filter": "Transparency",
       "Indicator priority": "high"
@@ -1625,10 +1625,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_technical_requirements_text",
@@ -1650,7 +1650,7 @@
       "Notes": "Could be calculated manually from other dates",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_title_text",
@@ -1658,7 +1658,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicators",
       "Indicator priority": "low"
@@ -1669,7 +1669,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1691,7 +1691,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency. Filter, grouping",
       "Indicator priority": "low"
@@ -1705,7 +1705,7 @@
       "Notes": "depends if the data is available at source",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_notice_count",
@@ -1716,7 +1716,7 @@
       "Notes": "depends if the data is available at source",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_source",
@@ -1724,10 +1724,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter, grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     }
   ],
   "lot": [
@@ -1740,7 +1740,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -1748,10 +1748,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -1770,7 +1770,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -1781,7 +1781,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Text indicators, filter, grouping",
       "Indicator priority": "medium"
@@ -1792,7 +1792,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter",
       "Indicator priority": "-"
@@ -1814,7 +1814,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "high"
@@ -1825,7 +1825,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -1836,7 +1836,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -1847,7 +1847,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -1858,7 +1858,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition",
       "Indicator priority": "low"
@@ -1869,7 +1869,7 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "low"
@@ -1880,7 +1880,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Dates & Deadlines",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "low"
@@ -1891,7 +1891,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "high"
@@ -1902,7 +1902,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -1913,7 +1913,7 @@
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Text indicator",
       "Indicator priority": "low"
@@ -1929,7 +1929,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -1937,10 +1937,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -1970,7 +1970,7 @@
       "Type": "numeric",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "High"
@@ -1981,7 +1981,7 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "High"
@@ -1992,7 +1992,7 @@
       "Type": "numeric",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2003,7 +2003,7 @@
       "Type": "categorical",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2014,7 +2014,7 @@
       "Type": "boolean",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Filter",
       "Indicator priority": "Low"
@@ -2025,7 +2025,7 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -2036,7 +2036,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -2047,7 +2047,7 @@
       "Type": "boolean",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Bidding & Participation",
       "Indicator type / filter": "Competition / efficiency",
       "Indicator priority": "Low"
@@ -2058,10 +2058,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_id_type",
@@ -2080,10 +2080,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_name",
@@ -2091,10 +2091,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_region_code",
@@ -2105,7 +2105,7 @@
       "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_city",
@@ -2113,10 +2113,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_postcode",
@@ -2124,10 +2124,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_country",
@@ -2135,10 +2135,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_email",
@@ -2146,10 +2146,10 @@
       "Type": "string",
       "Required availability": "optional",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "bidder_address_raw",
@@ -2157,10 +2157,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     }
   ],
   "buyer": [
@@ -2173,7 +2173,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -2181,10 +2181,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_id",
@@ -2195,7 +2195,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_master_id",
@@ -2203,10 +2203,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_name",
@@ -2214,10 +2214,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_region_code",
@@ -2228,7 +2228,7 @@
       "Notes": "for EU countries; sometimes NUTS could be derived from postal codes if needed",
       "Category": "Location",
       "Indicator type / filter": "Efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_email",
@@ -2236,10 +2236,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_contact_name",
@@ -2247,10 +2247,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Competition",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_contact_point",
@@ -2258,10 +2258,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Competition",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_city",
@@ -2269,10 +2269,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_country",
@@ -2280,10 +2280,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_type_raw",
@@ -2291,10 +2291,10 @@
       "Type": "categorical",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_type_std",
@@ -2305,7 +2305,7 @@
       "Notes": "Check enumeration",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "filter/grouping",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_postcode",
@@ -2313,10 +2313,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "buyer_address_raw",
@@ -2324,10 +2324,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Location",
       "Indicator type / filter": "Filter/grouping/competition/efficiency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     }
   ],
   "unit": [
@@ -2340,7 +2340,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -2348,10 +2348,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -2381,7 +2381,7 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
       "Indicator priority": "-"
@@ -2392,7 +2392,7 @@
       "Type": "categorical",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2403,7 +2403,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2414,7 +2414,7 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2425,7 +2425,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2447,7 +2447,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Description & Scope",
       "Indicator type / filter": "Efficiency",
       "Indicator priority": "Low"
@@ -2463,7 +2463,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -2471,10 +2471,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -2493,10 +2493,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "modification_reason_text",
@@ -2504,10 +2504,10 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency, transparency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "modification_date",
@@ -2515,10 +2515,10 @@
       "Type": "date",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "Efficiency, transparency",
-      "Indicator priority": NaN
+      "Indicator priority": null
     }
   ],
   "funding": [
@@ -2531,7 +2531,7 @@
       "Notes": "This should be either a generated ID, or source id if there is one",
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "tender_persistent_id",
@@ -2539,10 +2539,10 @@
       "Type": "string",
       "Required availability": "minimum",
       "Is calculated": true,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Identification & Basic Info",
       "Indicator type / filter": "-",
-      "Indicator priority": NaN
+      "Indicator priority": null
     },
     {
       "Variable": "lot_id",
@@ -2561,29 +2561,29 @@
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
     },
     {
       "Variable": "funding_program",
-      "Definition": "Name or classification of the funding program under which the procurement is financed (e.g., Operational Programme, EU Structural Fund, national co-financing scheme, etc).",
+      "Definition": "Name or classification of the funding program under which the procurement is finullced (e.g., Operational Programme, EU Structural Fund, national co-finullcing scheme, etc).",
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
     },
     {
       "Variable": "funding_share",
-      "Definition": "Share or percentage of the total contract or project value financed by this funding source.",
+      "Definition": "Share or percentage of the total contract or project value finullced by this funding source.",
       "Type": "numeric",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
@@ -2594,7 +2594,7 @@
       "Type": "string",
       "Required availability": "maximum",
       "Is calculated": false,
-      "Notes": NaN,
+      "Notes": null,
       "Category": "Prices & Funding",
       "Indicator type / filter": "Efficiency, transparency",
       "Indicator priority": "low"
