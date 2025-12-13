@@ -473,7 +473,7 @@ admin_threshold_config <- tibble::tribble(
   ~subm_medium_open_min, ~subm_medium_open_max, ~long_decision_days,
   
   "DEFAULT", 30, 30, 30, 30, 30, 60,
-  "UY",      21, 14, 14, NA, 28, 56, #Specify here country deadlines. Consider that in law there are business days, and we calculalte actual days, so business days should be transformed to actual days first.
+  "UY",      21, 14, 14, 21, 28, 56, #Specify here country deadlines. Consider that in law there are business days, and we calculalte actual days, so business days should be transformed to actual days first.
   "BG",      30, 30, 30, 30, 30, NA,
   "ID",      3, 3, NA, 3, 5, NA
 )
