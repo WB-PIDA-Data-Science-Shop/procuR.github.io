@@ -1,0 +1,444 @@
+---
+title: "Economic Outcomes Report"
+author: "Viktoriia Poltoratskaia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide   # or "show"
+---
+
+This section analyzes the overall performance and competitive dynamics of public procurement markets, focusing on market composition, bidder participation, and pricing outcomes. It examines the distribution of markets by contract size and value, identifies potential monopolistic structures through counts of unique suppliers per market and year, and assesses market volatility by tracking new entrants and regularly participating firms, including the diversity of supplier–buyer connections. The section evaluates competition levels by analyzing the number of bids across procedure types and the prevalence of single bidding and explores barriers to participation by reviewing bid submission timeframes and, where relevant, the restrictiveness of technical requirements. It also investigates pricing behavior such as savings or overruns relative to estimated prices, and regional or buyer-specific price patterns, and, when data allow, extends the analysis to price dispersion for standard products, the share of innovative goods, and comparisons of productivity between winning and non-winning firms. 
+
+- **Market sizing** by CPV cluster (counts, total value, average contract size)
+- **Supplier dynamics** (new vs. repeat suppliers, unique suppliers over time)
+- **Buyer–supplier networks** (yearly snapshots for chosen CPV clusters)
+- **Relative price diagnostics** (contract vs. estimated price; Bulgaria-style)
+- **Competition diagnostics** using single-bid incidence (Uruguay-style)
+
+> Tip: The report is designed to run end-to-end with minimal editing.  
+> You only need to point to your input files and an output directory.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width  = 10,
+  fig.height = 6
+)
+
+# Source your economic efficiency utils (functions + pipeline)
+# (Update this path)
+source("C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/econ_eff_utils.R")
+
+required_packages <- c(
+  "data.table","dplyr","tidyr","stringr","purrr",
+  "ggplot2","scales","ggrepel","tidygraph","ggraph","patchwork"
+)
+
+load_packages <- function(pkgs) {
+  installed  <- rownames(installed.packages())
+  to_install <- setdiff(pkgs, installed)
+  if (length(to_install) > 0) install.packages(to_install)
+  invisible(lapply(pkgs, library, character.only = TRUE))
+}
+load_packages(required_packages)
+
+# Safe-print helpers (so report doesn't break when objects are NULL)
+print_plot <- function(x) { if (!is.null(x)) print(x); invisible(x) }
+print_tbl  <- function(x) { if (!is.null(x)) print(x); invisible(x) }
+```
+
+
+```{r multi-country-setup, include=FALSE}
+base_dir      <- "C:/Users/wb589991/Downloads"
+country_codes <- c("BG", "UY", "ID")
+
+# CPV path (update if needed)
+
+cpv_path <- file.path(base_dir, "cpv_codes.csv")
+
+# Build CPV lookup ONCE (reused for all countries)
+
+cpv <- load_data(cpv_path)
+cpv_lookup <- build_cpv_lookup(cpv)
+
+results_list <- purrr::map(country_codes, function(cc) {
+  input_dir  <- file.path(base_dir, paste0(cc, "_export.csv"))
+  input_path <- file.path(input_dir, paste0(cc, "_export.csv"))
+  output_dir <- input_dir
+
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+  df <- load_data(input_path)
+
+  run_economic_efficiency_pipeline(
+  df           = df,
+  country_code = cc,
+  output_dir   = output_dir,
+  cpv_lookup   = cpv_lookup,
+  network_cpv_clusters = c("45","33"),
+  save_outputs = TRUE
+  )
+})
+
+names(results_list) <- country_codes
+```
+
+```{r helpers-report, echo=FALSE}
+print_result_plot <- function(results,
+                              obj_name,
+                              title = NULL,
+                              description = "",
+                              level = 4,
+                              fig_width = 10,
+                              fig_height = 7) {
+  p <- results[[obj_name]]
+
+  if (!is.null(title)) {
+    cat(paste0(strrep("#", level), " ", title, "\n\n"))
+  }
+
+  if (!is.null(description) && nchar(description) > 0) {
+    cat(description, "\n\n")
+  }
+
+  if (is.null(p)) {
+    cat("_Not available for this country (missing data/columns or pipeline skipped this step)._ \n\n")
+  } else {
+    withr::local_options(list(repr.plot.width = fig_width,
+                              repr.plot.height = fig_height))
+    print(p)
+    cat("\n\n")
+  }
+}
+
+```
+
+
+```{r country-results}
+render_country_results_econ <- function(cc, results_list) {
+  results <- results_list[[cc]]
+  summ    <- results$summary_stats
+
+  cat("#### Basic data summary for ", cc, "\n\n", sep = "")
+
+  ## ------------------------------------------------------------
+  ## Contracts per year
+  ## ------------------------------------------------------------
+  cat("**Contracts per year:**\n\n")
+  if (!is.null(summ$n_obs_per_year)) {
+    contracts_tbl <- as.data.frame(summ$n_obs_per_year)
+    knitr::kable(
+      contracts_tbl,
+      col.names = c("Tender year", "Number of contracts"),
+      align = c("c", "c")
+    ) %>% print()
+    cat("\n\n")
+  } else {
+    cat("_Not available (no `tender_year`)._\n\n")
+  }
+  
+  # ================================================================
+  # CPV definitions (cluster -> category)
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\">CPV definitions (cluster → category)</span>\n\n", sep = "")
+
+  # If you have labels, build a compact legend table from the market summary
+  if (!is.null(results$market_summary) &&
+      all(c("cpv_cluster", "cpv_category") %in% names(results$market_summary))) {
+
+    cpv_legend <- results$market_summary %>%
+      dplyr::select(cpv_cluster, cpv_category) %>%
+      dplyr::distinct() %>%
+      dplyr::arrange(cpv_cluster)
+
+    if (nrow(cpv_legend) > 0) {
+      knitr::kable(
+        cpv_legend,
+        col.names = c("CPV cluster", "CPV category"),
+        align = c("c", "l")
+      ) %>% print()
+      cat("\n\n")
+    } else {
+      cat("_No CPV definitions available after filtering._\n\n")
+    }
+
+  } else {
+    cat("_Not available (missing `market_summary` and/or CPV labels)._ \n\n")
+  }
+
+  ## ------------------------------------------------------------
+  ## Unique buyers / bidders
+  ## ------------------------------------------------------------
+  if (!is.null(summ$n_unique_buyers) && !is.na(summ$n_unique_buyers)) {
+    cat("**Number of unique buyers (buyer_masterid):** ",
+        formatC(summ$n_unique_buyers, big.mark = ","), "\n\n")
+  } else {
+    cat("**Number of unique buyers:** column `buyer_masterid` not found.\n\n")
+  }
+
+  if (!is.null(summ$n_unique_bidders) && !is.na(summ$n_unique_bidders)) {
+    cat("**Number of unique bidders (bidder_masterid):** ",
+        formatC(summ$n_unique_bidders, big.mark = ","), "\n\n")
+  } else {
+    cat("**Number of unique bidders:** column `bidder_masterid` not found.\n\n")
+  }
+
+  ## ------------------------------------------------------------
+  ## Unique tenders per year
+  ## ------------------------------------------------------------
+  if (!is.null(summ$tender_year_tenders)) {
+    cat("**Number of unique tenders per year:**\n\n")
+    tenders_tbl <- as.data.frame(summ$tender_year_tenders)
+    knitr::kable(
+      tenders_tbl,
+      col.names = c("Tender year", "Number of unique tenders"),
+      align = c("c", "c")
+    ) %>% print()
+    cat("\n\n")
+  }
+
+  ## ------------------------------------------------------------
+  ## Variables present
+  ## ------------------------------------------------------------
+  cat("**Variables present (excluding indicator variables):**\n\n")
+  cat(paste0("- ", summ$vars_present, collapse = "\n"), "\n\n")
+
+  # ================================================================
+  # 1) Market sizing
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\">What is the overall market composition? </span>\n\n", sep = "")
+
+  print_result_plot(
+    results, "market_size_n",
+    title = paste("Market size by number of contracts –", cc),
+    description = paste(
+      "This chart compares how active different CPV markets are in terms of the number of contracts.",
+      "Markets with very large volumes can indicate routine spending categories and high administrative workload.",
+      "Pay attention to whether spending seems concentrated in a small number of markets or broadly spread across many categories.",
+      "Very small markets can still matter, but they often reflect niche purchasing rather than system-wide dynamics."
+    )
+  )
+
+  print_result_plot(
+    results, "market_size_v",
+    title = paste("Market size by total value –", cc),
+    description = paste(
+      "This chart shows where the money is concentrated across CPV markets.",
+      "A small number of very large markets suggests concentration of budget and potentially higher strategic importance.",
+      "Compare this figure to contract counts: markets that are high value but low count often reflect a few big projects.",
+      "Markets that are high in both value and count typically represent core procurement areas."
+    )
+  )
+
+  print_result_plot(
+    results, "market_size_av",
+    title = paste("Market size bubble plot –", cc),
+    description = paste(
+      "This plot combines volume and typical contract size to show how markets differ in structure.",
+      "Markets with many contracts but low average value reflect frequent small purchases.",
+      "Markets with few contracts but high average value reflect infrequent but large awards.",
+      "Pay attention to outliers: unusually high average values can signal major infrastructure-type markets or atypical pricing patterns."
+    )
+  )
+
+  # ================================================================
+  # 2) Supplier dynamics
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\"> How volatile are the markets in terms of new vs old suppliers?   </span>\n\n", sep = "")
+
+  print_result_plot(
+  results, "suppliers_entrance",
+  title = paste("New vs repeat suppliers –", cc),
+  description = paste(
+    "This figure shows how supplier participation evolves over time within markets: new entrants versus repeat suppliers.",
+    "A healthy level of new entry can indicate openness and contestability, while very low entry may suggest barriers or stable incumbent dominance.",
+    "Look for markets where entry falls over time, which can signal consolidation or reduced attractiveness.",
+    "Very high entry shares can also reflect fragmentation or one-off participation rather than stable competitive ecosystems."
+  ),
+  fig_width = 12,
+  fig_height = 12
+)
+
+print_result_plot(
+  results, "unique_supp",
+  title = paste("Unique suppliers over time –", cc),
+  description = paste(
+    "This chart tracks how many distinct suppliers participate over time, by market.",
+    "Growth can indicate expanding competition or improved access; decline can signal consolidation or weakening supplier interest.",
+    "Pay attention to sharp breaks (sudden rises/falls), which may reflect policy changes, shocks, or data coverage differences across years.",
+    "Persistent low supplier counts in specific markets may point to structural constraints or naturally thin markets."
+  ),
+  fig_width = 12,
+  fig_height = 12
+)
+
+  # ================================================================
+  # 3) Buyer–supplier networks (optional)
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\">Are buyers able to choose from a variety of market offerings? </span>\n\n", sep = "")
+
+  if (!is.null(results$network_plots) && length(results$network_plots) > 0) {
+  purrr::iwalk(results$network_plots, function(p, nm) {
+    cat("##### ", nm, "\n\n", sep = "")
+    cat(paste(
+      "This network visualizes who buys from whom within the selected CPV market, shown by year.",
+      "Dense networks with many connections typically reflect broad participation and diversified contracting relationships.",
+      "Star-like patterns (a few dominant buyers or suppliers connected to many partners) can indicate concentration or strong central actors.",
+      "Pay attention to repeated tight clusters or isolated components, which may reflect segmented sub-markets or exclusive relationships."
+    ), "\n\n")
+
+    if (is.null(p)) {
+      cat("_Not available for this country/market (missing columns or no eligible data)._ \n\n")
+    } else {
+      # Make the printed network plot taller (and a bit wider)
+      old <- options(
+        repr.plot.width  = 12,
+        repr.plot.height = 18
+      )
+      on.exit(options(old), add = TRUE)
+
+      print(p)
+      cat("\n\n")
+    }
+  })
+} else {
+  cat("_No network plots produced for this country (missing columns or no eligible data)._ \n\n")
+}
+
+
+  # ================================================================
+  # 4) Relative prices (optional)
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\">Are there price savings or price overruns prevailing?  </span>\n\n", sep = "")
+
+  print_result_plot(
+    results, "rel_tot",
+    title = paste("Density of relative prices –", cc),
+    description = paste(
+      "This plot shows how contract prices compare to their corresponding estimates across tenders.",
+      "Mass concentrated near 1 suggests estimates broadly align with contracted prices.",
+      "A heavy right tail indicates cases where contract prices exceed estimates more often or more strongly.",
+      "Pay attention to whether the distribution is wide and skewed, which can signal inconsistent estimation, pricing uncertainty, or weak cost control."
+    )
+  )
+
+  print_result_plot(
+    results, "rel_year",
+    title = paste("Relative prices over time –", cc),
+    description = paste(
+      "This figure shows how the contract-to-estimate ratio changes over time.",
+      "It helps identify whether pricing performance is stable or shifting across years.",
+      "Look for widening spread (greater variability) or upward shifts (contracting increasingly above estimates).",
+      "Strong year-to-year volatility may indicate changing market conditions, estimation practices, or procurement discipline."
+    )
+  )
+
+  print_result_plot(
+    results, "rel_10",
+    title = paste("Top markets by relative prices –", cc),
+    description = paste(
+      "This figure highlights the markets where contracted prices tend to be highest relative to estimates.",
+      "It is useful for prioritizing which sectors may deserve deeper review of cost estimation and price formation.",
+      "Pay attention to whether these markets also have low competition or small supplier bases in earlier diagnostics.",
+      "Outliers may reflect genuinely difficult-to-estimate markets, but persistent patterns can be a red flag for weak cost control."
+    )
+  )
+
+  print_result_plot(
+    results, "rel_buy",
+    title = paste("Top buyers by relative prices –", cc),
+    description = paste(
+      "This chart compares buyers by how high their contracted prices tend to be relative to estimates.",
+      "It can help identify institutions that consistently contract above estimates and may require targeted support or scrutiny.",
+      "Pay attention to whether high ratios are paired with small numbers of contracts—those can be unstable and should be interpreted cautiously.",
+      "Consistently high values among frequent buyers are more informative and may suggest systematic differences in planning or negotiation practices."
+    )
+  )
+
+  # ================================================================
+  # 5) Competition diagnostics (optional)
+  # ================================================================
+  cat("#### <span style=\"color:red; font-weight:bold\">Is there a high competition? </span>\n\n", sep = "")
+
+  print_result_plot(
+    results, "single_bid_by_procedure",
+    title = paste("Single-bid share by procedure –", cc),
+    description = paste(
+      "This chart shows how often tenders receive only one bid across different procedure types.",
+      "Higher single-bid shares can indicate weaker competition, barriers to entry, or procedures that are less attractive to suppliers.",
+      "Pay attention to procedure types that are expected to be competitive but still show high single-bid incidence.",
+      "A strong contrast across procedures can point to where rule design or implementation practices matter most."
+    )
+  )
+  
+  print_result_plot(
+    results, "single_bid_market_procedure_price_top",
+    title = paste("Single-bid shares by market × procedure × value (Top 5 markets) –", cc),
+    description = paste(
+      "This plot focuses on the CPV clusters with the highest overall single-bid incidence.",
+      "Within those markets, it shows how single-bid outcomes vary by procedure type and contract value bins.",
+      "Use it to identify *where* single bidding concentrates (e.g., specific procedures at higher values).",
+      "Interpret sparse cells cautiously (small counts can be noisy)."
+    )
+  )
+
+  print_result_plot(
+    results, "single_bid_by_price",
+    title = paste("Single-bid share by contract value –", cc),
+    description = paste(
+      "This figure shows whether single bidding is more common for smaller or larger contracts.",
+      "High single-bid shares at very low values may reflect routine purchasing and limited supplier incentives to compete.",
+      "High single-bid shares at high values are typically more concerning, as they affect major spending decisions.",
+      "Look for non-linear patterns (e.g., competition improving at mid-values but falling again at the top end)."
+    )
+  )
+
+  print_result_plot(
+    results, "single_bid_by_price_and_procedure",
+    title = paste("Single-bid share by value × procedure –", cc),
+    description = paste(
+      "This plot combines contract value and procedure type to show where single bidding concentrates.",
+      "It helps distinguish whether single-bid outcomes are mainly driven by procedure choices or by contract size.",
+      "Pay attention to combinations where high-value contracts are frequently single-bid within procedures that should support competition.",
+      "This is a useful targeting tool: it narrows attention to specific segments where competitive pressure appears weakest."
+    )
+  )
+
+  print_result_plot(
+    results, "single_bid_by_buyer_group",
+    title = paste("Single-bid share by buyer group –", cc),
+    description = paste(
+      "This chart compares competition across broad buyer types.",
+      "Differences can reflect buyer capacity, market reach, supplier engagement practices, or the nature of what each group buys.",
+      "Pay attention to buyer groups with persistently high single-bid shares, especially if they also command large market value.",
+      "Large gaps across groups may suggest that reforms or capacity-building should be targeted rather than system-wide."
+    )
+  )
+
+  print_result_plot(
+    results, "top_buyers_single_bid",
+    title = paste("Top buyers by single-bid share –", cc),
+    description = paste(
+      "This figure highlights the buyers with the highest incidence of single bidding.",
+      "It is useful for targeting follow-up: reviewing procurement planning, market engagement, and tender design in the highest-risk institutions.",
+      "Pay attention to whether these buyers appear frequently in the data—consistently high single-bid rates among frequent buyers are most informative.",
+      "Use this as a screening tool rather than a verdict: high single bidding may reflect difficult markets, but persistent patterns deserve attention."
+    )
+  )
+}
+```
+## Country-specific results {.tabset}
+
+### Bulgaria (BG)
+```{r country-BG, echo=FALSE, results='asis'}
+render_country_results_econ("BG", results_list)
+```
+
+### Uruguat (UY)
+
+```{r country-UY, echo=FALSE, results='asis'}
+render_country_results_econ("UY", results_list)
+```
+
