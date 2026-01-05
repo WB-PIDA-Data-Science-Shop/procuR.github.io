@@ -375,19 +375,25 @@ Project</a>
 <ul>
 <li><a href="#about-this-repository" id="toc-about-this-repository">📘
 About this repository</a></li>
-<li><a href="#quick-links" id="toc-quick-links">🔗 Quick Links</a></li>
-<li><a href="#how-to-reproduce-analyses" id="toc-how-to-reproduce-analyses">📈 How to Reproduce Analyses</a></li>
+<li><a href="#thematic-fields-and-analytical-frameworks" id="toc-thematic-fields-and-analytical-frameworks">🔍 Thematic fields
+and analytical frameworks</a></li>
+<li><a href="#data-standards-references-and-useful-resources" id="toc-data-standards-references-and-useful-resources">📚 Data
+standards, references, and useful resources</a></li>
+<li><a href="#how-to-reproduce-the-analyses" id="toc-how-to-reproduce-the-analyses">📈 How to Reproduce the
+Analyses</a></li>
 </ul></li>
 </ul>
 </div>
 
 <div id="welcome-to-the-procur-project" class="section level1">
 <h1>Welcome to the <em>procuR</em> Project</h1>
-<p>This website hosts documentation, analysis, and methodology for the
-<strong>World Bank PIDA Data Science Shop’s procurement transparency
-work</strong>.</p>
-<p>The site is built with <strong>R Markdown</strong> and published
-automatically via <strong>GitHub Pages</strong>.</p>
+<p>This repository hosts documentation, source materials, and analytical
+methodologies for working with public procurement contract data.</p>
+<p>The data-cleaning codebase is currently under development; therefore,
+the analysis pipelines presently rely on data from the <a href="https://www.procurementintegrity.org/data/"><code>ProAct data</code></a>.
+At this stage of the project, datasets can be downloaded on a
+country-by-country basis from ProAct and integrated into the pipeline to
+generate analytical outputs.</p>
 <hr />
 <div id="about-this-repository" class="section level2">
 <h2>📘 About this repository</h2>
@@ -395,12 +401,13 @@ automatically via <strong>GitHub Pages</strong>.</p>
 <ul>
 <li><code>index.Rmd</code> — this homepage<br />
 </li>
-<li><code>integrity_report.Rmd</code> — analysis of public procurement
+<li><code>integrity_report.Rmd</code> and
+<code>integrity_report.R</code>— analysis of public procurement
 transparency</li>
-<li><code>admin_eff_report.Rmd</code> — analysis of public procurement
-administrative efficiency</li>
-<li><code>economic_outcome_report.Rmd</code> — analysis of public
-procurement economic outcomes</li>
+<li><code>admin_eff_report.Rmd</code>and <code>admin_eff.R</code> —
+analysis of public procurement administrative efficiency</li>
+<li><code>econ_out_report.Rmd</code> and <code>econ_out.R</code> —
+analysis of public procurement economic outcomes</li>
 <li>Supporting datasets, scripts, and rendered outputs
 (<code>.html</code>, <code>.tex</code>)</li>
 </ul>
@@ -408,23 +415,84 @@ procurement economic outcomes</li>
 package.</p>
 <hr />
 </div>
-<div id="quick-links" class="section level2">
-<h2>🔗 Quick Links</h2>
+<div id="thematic-fields-and-analytical-frameworks" class="section level2">
+<h2>🔍 Thematic fields and analytical frameworks</h2>
+<p>This section provides access to the main analytical modules
+implemented in the project. Each module focuses on a distinct thematic
+dimension of public procurement performance and applies a harmonized
+data-processing and indicator framework.</p>
 <ul>
-<li><p><a href="integrity_report.html">Integrity Analysis</a></p></li>
-<li><p><a href="admin_eff_report.html">Administrative Efficiency
-Analysis</a></p></li>
-<li><p><a href="econ_out_report.html">Economic Outcome
-Analysis</a></p></li>
-<li><p><a href="https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io">GitHub
-Repository</a></p></li>
-<li><p><a href="dataindex.html">Data Template</a></p></li>
+<li><p><strong><a href="integrity_report.html">Integrity
+Analysis</a></strong><br />
+Analysis of transparency and accountability challenges in public
+procurement systems using procurement data.</p></li>
+<li><p><strong><a href="admin_eff_report.html">Administrative Efficiency
+Analysis</a></strong><br />
+Assessment of procedural efficiency, administrative burden, and
+implementation performance in procurement processes.</p></li>
+<li><p><strong><a href="econ_out_report.html">Economic Outcome
+Analysis</a></strong><br />
+Evaluation of procurement outcomes, including competition, pricing
+efficiency, and broader economic impacts.</p></li>
+<li><p><strong><a href="https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io">GitHub
+Repository</a></strong><br />
+Full source code, documentation, and reproducible analysis
+pipelines.</p></li>
 </ul>
 <hr />
 </div>
-<div id="how-to-reproduce-analyses" class="section level2">
-<h2>📈 How to Reproduce Analyses</h2>
-<pre class="r"><code>rmarkdown::render(&quot;index.Rmd&quot;)</code></pre>
+<div id="data-standards-references-and-useful-resources" class="section level2">
+<h2>📚 Data standards, references, and useful resources</h2>
+<p>This section documents the data foundations of the project, including
+input data sources, qualitative benchmarks, methodological references,
+and reusable data templates supporting replication and extension.</p>
+<ul>
+<li><p><strong><a href="data_source_ref.html">Open Public Procurement
+Data Sources</a></strong><br />
+Overview of major open public procurement datasets, their coverage,
+update frequency, formats, and processing status.</p></li>
+<li><p><strong><a href="qual_assessment.html">Qualitative Assessment
+Sources</a></strong><br />
+Comparative qualitative frameworks and expert assessments of public
+procurement systems.</p></li>
+<li><p><strong><a href="proc_ind_ex.html">Example Studies and Projects
+Using Procurement Quantitative Indicators</a></strong><br />
+Empirical studies and applied projects demonstrating the use of
+procurement indicators across thematic areas.</p></li>
+<li><p><strong><a href="data_process.html">Data Processing Approaches
+and Templates</a></strong><br />
+Methodological guidance, processing pipelines, and variable templates
+for transforming raw procurement data into analytical datasets.</p></li>
+<li><p><strong><a href="dataindex.html">Data Template</a></strong><br />
+Standardized data structure and variable definitions used across
+analytical modules.</p></li>
+</ul>
+<hr />
+</div>
+<div id="how-to-reproduce-the-analyses" class="section level2">
+<h2>📈 How to Reproduce the Analyses</h2>
+<p>To reproduce the analyses on your local machine, you will need the
+following:</p>
+<ul>
+<li><strong>R</strong>: version <strong>4.5.1</strong> or newer</li>
+<li><strong>RStudio</strong> (Posit): recommended</li>
+<li><strong>The relevant ProAct dataset</strong>, downloaded
+separately</li>
+<li><strong>Analysis files from this GitHub repository</strong>:<br />
+<a href="https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io" class="uri">https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io</a></li>
+</ul>
+<p>For each thematic analysis, two files are required:</p>
+<ul>
+<li><p><code>.utils.R</code><br />
+An R script that implements the data-processing and analysis
+pipeline.<br />
+This script contains parameters that may need to be adapted for new
+countries (e.g. time coverage, filtering rules, or threshold
+values).</p></li>
+<li><p><code>_report.Rmd</code><br />
+An R Markdown file that generates the analytical report (HTML, DOCX, or
+PDF), including tables and figures.</p></li>
+</ul>
 </div>
 </div>
 
