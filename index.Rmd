@@ -34,16 +34,16 @@ All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.
 
 This section provides access to the main analytical modules implemented in the project. Each module focuses on a distinct thematic dimension of public procurement performance and applies a harmonized data-processing and indicator framework.
 
-- **[Integrity Analysis](integrity_report.html)**  
+- **[Integrity Analysis](src/htmls/integrity_report.html)**  
   Analysis of transparency and accountability challenges in public procurement systems using procurement data.
 
-- **[Administrative Efficiency Analysis](admin_eff_report.html)**  
+- **[Administrative Efficiency Analysis](src/htmls/admin_eff_report.html)**  
   Assessment of procedural efficiency, administrative burden, and implementation performance in procurement processes.
 
-- **[Economic Outcome Analysis](econ_out_report.html)**  
+- **[Economic Outcome Analysis](src/htmls/econ_out_report.html)**  
   Evaluation of procurement outcomes, including competition, pricing efficiency, and broader economic impacts.
 
-- **[GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io)**  
+- **[GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/src)**  
   Full source code, documentation, and reproducible analysis pipelines.
 
 ---
