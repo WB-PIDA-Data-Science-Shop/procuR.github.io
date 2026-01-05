@@ -3,3 +3,8 @@
 .RData
 .Ruserdata
 data/
+
+# R/RStudio
+.Rproj.user/
+.Rhistory
+.RData
