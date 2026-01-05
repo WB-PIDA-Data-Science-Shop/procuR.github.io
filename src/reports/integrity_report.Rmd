@@ -1,0 +1,541 @@
+---
+title: "Integrity, transparency, and accountability analysis"
+author: "Viktoriia Poltoratskaia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide   # or "show"
+---
+This analysis examines transparency and accountability challenges in public procurement systems using procurement data. The tool provides a framework for assessing the extent to which regulatory requirements are reflected in actual implementation, focusing on transparency and accountability as key determinants of procurement integrity and corruption risk. Beyond evaluating data availability and accessibility, the analysis proposes tests to identify potential collusive relationships between buyers and suppliers and assesses how transparency affects competition and price overruns. 
+
+### <span style="color:red; font-weight:bold">Is there a legal mandate to ensure information accessibility?</span>
+
+Requires manual filling
+
+#### Electronic Procurement and Online Access to Procurement Data
+
+| Indicator | Source |
+|:----------|:-------|
+| Is there a legal framework requiring or enabling the use of e-procurement systems (electronic means) as the standard means of communication and information exchange in procurement procedures? | SIGMA Brief No. 17 (E-Procurement); MAPS assessment; National legislation |
+
+
+#### Legal Requirement for Publishing Tender Information
+
+| Indicator | Source |
+|:----------|:-------|
+| Does the procurement law mandate the publication of tender documents, bidding documents, awarded contracts and subcontracting in a central and publicly accessible platform (including framework agreements and direct awards)? | EuroPAM Public Procurement Indicators — Qual-16 to Qual-22; MAPS assessment; National legislation |
+| Are there any procedures that are excluded from the requirement of publication? | EuroPAM Public Procurement Indicators — Qual-16 to Qual-22; MAPS assessment; National legislation |
+
+
+#### Central Oversight
+
+| Indicator | Source |
+|:----------|:-------|
+| Does the law establish a dedicated central procurement authority or regulatory body responsible for overseeing transparency and compliance with procurement regulations? | SIGMA Brief No. 26 (Organizing Central Public Procurement Functions); EuroPAM indicator Qual-57; MAPS assessment; National legislation |
+
+
+---
+
+### <span style="color:red; font-weight:bold">Is data open, machine readable and not missing any crucial fields?</span>  
+
+#### Platform information
+
+Requires manual filling
+
+| Field                | Value                 |
+|:---------------------|:----------------------|
+| Platform URL         |                       |
+| Year of introduction |                       |
+| Type of access       | Free / paid / limited |
+
+
+#### Data fields
+
+Requires manual filling
+
+
+| Field                          | Is available? | Type of data                               |
+|:-------------------------------|:-------------:|:-------------------------------------------|
+| Procurement plans              | Yes/No        | Scanned PDFs / xml / html / no information |
+| Call for tenders               | Yes/No        | Scanned PDFs / xml / html / no information |
+| Modification or cancellation   | Yes/No        | Scanned PDFs / xml / html / no information |
+| Announcement of awards         | Yes/No        | Scanned PDFs / xml / html / no information |
+| Details on contract signature  | Yes/No        | Scanned PDFs / xml / html / no information |
+| Implementation information     | Yes/No        | Scanned PDFs / xml / html / no information |
+| Framework agreement            | Yes/No        | Scanned PDFs / xml / html / no information |
+| Direct awards                  | Yes/No        | Scanned PDFs / xml / html / no information |
+| Subcontractors                 | Yes/No        | Scanned PDFs / xml / html / no information |
+
+
+**Source:** National platform website
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo   = TRUE,     # show code; set to FALSE if you want a clean report
+  message = FALSE,
+  warning = FALSE,
+  fig.width  = 10,
+  fig.height = 6
+)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 8)
+
+# Source your helper + pipeline functions
+source("C:/Users/wb589991/OneDrive - WBG/Documents/temp_inspect_repo/integrity_utils.R")
+
+# Load packages
+required_packages <- c(
+  "data.table", "tidyverse", "patchwork", "corrr",
+  "giscoR", "eurostat", "sf", "tidytext",
+  "fixest", "ggeffects", "igraph", "ggraph", "purrr"
+)
+
+load_packages <- function(pkgs) {
+  installed  <- rownames(installed.packages())
+  to_install <- setdiff(pkgs, installed)
+  if (length(to_install) > 0) install.packages(to_install)
+  invisible(lapply(pkgs, library, character.only = TRUE))
+}
+
+load_packages(required_packages)
+```
+
+```{r multi-country-setup, include=FALSE}
+base_dir      <- "C:/Users/wb589991/Downloads"
+country_codes <- c("BG", "UY")   # <- add more here if needed: "BG", "UY", "RO", ...
+
+results_list <- map(country_codes, function(cc) {
+  input_dir  <- file.path(base_dir, paste0(cc, "_export.csv"))
+  input_path <- file.path(input_dir, paste0(cc, "_export.csv"))
+  output_dir <- input_dir
+  
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  df <- load_data(input_path)
+  run_integrity_pipeline(
+    df           = df,
+    country_code = cc,
+    output_dir   = output_dir
+  )
+})
+
+names(results_list) <- country_codes
+```
+
+```{r helpers-report, echo=FALSE}
+# Helper to print a ggplot (or message) plus text around it
+print_result_plot <- function(results,
+                              obj_name,
+                              title,
+                              description = NULL,
+                              missing_msg = "Figure not produced: no information or key variable is missing for the plot.") {
+  # Pull object from list by name
+  obj <- results[[obj_name]]
+  
+  # Section title
+  cat("#### ", title, "\n\n", sep = "")
+  
+  # Optional description paragraph
+  if (!is.null(description)) {
+    cat(description, "\n\n")
+  }
+  
+  # If it's a ggplot, print it
+  if (inherits(obj, "gg")) {
+    print(obj)
+    cat("\n\n")
+  } else if (is.null(obj)) {
+    # If it's NULL -> no plot
+    cat("*", missing_msg, "*\n\n", sep = "")
+  } else {
+    # Something exists but is not a ggplot (e.g. data frame / model)
+    cat("*Object exists but is not a plot (class: ", paste(class(obj), collapse = ", "),
+        "). Nothing to draw here.*\n\n", sep = "")
+  }
+}
+```
+
+```{r country-results-helper, include=FALSE}
+render_country_results <- function(cc, results_list) {
+  # grab the correct results object
+  results <- results_list[[cc]]
+  summ    <- results$summary_stats
+  cat("#### Basic data summary for ", cc, "\n\n", sep = "")
+  
+  ## ------------------------------------------------------------
+  ## Contracts per year
+  ## ------------------------------------------------------------
+  cat("**Contracts per year:**\n\n")
+  if (!is.null(summ$n_obs_per_year)) {
+    contracts_tbl <- summ$n_obs_per_year %>%
+      as.data.frame()    # in case it's a tibble / data.table
+    knitr::kable(
+      contracts_tbl,
+      col.names = c("Tender year", "Number of contracts"),
+      align = c("c", "c")
+    ) %>% print()
+    cat("\n\n")
+  } else {
+    cat("_Not available (no `tender_year`)._\n\n")
+  }
+  
+  ## ------------------------------------------------------------
+  ## Unique buyers / bidders
+  ## ------------------------------------------------------------
+  if (!is.na(summ$n_unique_buyers)) {
+    cat("**Number of unique buyers (buyer_masterid):** ",
+        formatC(summ$n_unique_buyers, big.mark = ","), "\n\n")
+  } else {
+    cat("**Number of unique buyers:** column `buyer_masterid` not found.\n\n")
+  }
+  
+  if (!is.na(summ$n_unique_bidders)) {
+    cat("**Number of unique bidders (bidder_masterid):** ",
+        formatC(summ$n_unique_bidders, big.mark = ","), "\n\n")
+  } else {
+    cat("**Number of unique bidders:** column `bidder_masterid` not found.\n\n")
+  }
+  
+  ## ------------------------------------------------------------
+  ## Unique tenders per year
+  ## ------------------------------------------------------------
+  if (!is.null(summ$tender_year_tenders)) {
+    cat("**Number of unique tenders per year:**\n\n")
+    tenders_tbl <- summ$tender_year_tenders %>%
+      as.data.frame()
+    knitr::kable(
+      tenders_tbl,
+      col.names = c("Tender year", "Number of unique tenders"),
+      align = c("c", "c")
+    ) %>% print()
+    cat("\n\n")
+  }
+  
+  ## ------------------------------------------------------------
+  ## Variables present
+  ## ------------------------------------------------------------
+  cat("**Variables present (excluding indicator variables):**\n\n")
+  # bullet list instead of one long line
+  cat(paste0("- ", summ$vars_present, collapse = "\n"), "\n\n")
+  ## --------------------------------------------------------------------
+  ## 1. Patterns of underreporting (all "figs1" plots)
+  ## --------------------------------------------------------------------
+  # Question title and introductory text
+  cat("#### <span style=\"color:red; font-weight:bold\">Are there observable patterns of underreporting information in the data?</span>\n\n")
+  cat("The first step is to assess data completeness by examining missing values across all variables or a defined subset. ",
+      "Given the limited number of variables in the ProAct dataset, a full review can be efficiently conducted to identify ",
+      "any variables with significant underreporting. Each variable contributed to one of the ProAct indicators.\n\n", sep = "")
+
+  print_result_plot(
+    results,
+    obj_name    = "missing_plot",
+    title       = paste("Overall Missing Values by Variable –", cc),
+    description = paste(
+      "This figure summarises the share of missing values for each key variable in the dataset.",
+      "For every non-indicator column (all variables that do not start with 'ind_'), the pipeline computes the",
+      "mean of an NA indicator across all observations, i.e. the proportion of records where that field is missing.",
+      "Variables are displayed with human-readable labels (e.g. buyer and bidder IDs, names, locations, prices).",
+      "Use this plot to identify which core fields are most affected by missingness and may compromise analysis –",
+      "especially high-missingness identifiers, dates, and price variables."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "missing_by_buyer_plot",
+    title       = paste("Missingness by Buyer Type –", cc),
+    description = paste(
+      "This heatmap shows how missingness varies across buyer types and variables.",
+      "Buyers are categorised into 'National', 'Regional', 'Utilities', 'EU agency', and 'Other Public Bodies'",
+      "based on the 'buyer_buyertype' field. For each buyer group, the pipeline computes the share of missing values",
+      "for all non-indicator variables and reshapes them into a long format.",
+      "Darker cells indicate a higher proportion of missing values for a given variable within a buyer group.",
+      "Pay particular attention to patterns where specific buyer types systematically lack key identifiers",
+      "(e.g. buyer IDs, names, addresses) or financial fields, as these gaps may signal structural reporting issues."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "missing_buyers",
+    title       = paste("Missingness Among Top Buyers –", cc),
+    description = paste(
+      "This bar chart highlights the top 10 buyers with the highest overall share of missing data.",
+      "The underlying calculation groups the data by 'buyer_name' and 'buyer_buyertype',",
+      "keeps only buyers with at least 100 records, and then computes the average share of missing values",
+      "across all non-indicator variables. Labels show truncated buyer names with buyer type on the next line.",
+      "Use this figure to spot specific organisations that drive data quality problems:",
+      "buyers with very high missingness may require targeted engagement or manual cleaning before deeper analysis."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "missing_by_proc_plot",
+    title       = paste("Missingness by Procedure Type –", cc),
+    description = paste(
+      "This heatmap displays the share of missing values for each variable, broken down by procurement procedure type.",
+      "The pipeline recodes 'tender_proceduretype' into readable procedural categories",
+      "(e.g. Open, Restricted, Negotiated with/without publication, Outright award, Competitive dialogue),",
+      "then computes missingness shares for all non-indicator variables by procedure group and reshapes to long format.",
+      "Each cell gives the proportion of missing values for a given variable within a procedure type.",
+      "Look for procedure types where key information (such as buyer and bidder identifiers, contract values, or dates)",
+      "is systematically missing – this may indicate opacity in less competitive or exceptional procedures."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "year_miss",
+    title       = paste("Trends in Missing Shares Over Time –", cc),
+    description = paste(
+      "This line plot tracks how missingness evolves over time for the 10 variables with the highest average missing share.",
+      "For each 'tender_year', the pipeline computes missingness shares for all non-indicator variables,",
+      "identifies the top 10 variables with the largest average missingness, and then plots their yearly trajectories.",
+      "Lines show the proportion of missing values by year for each selected variable.",
+      "Use this figure to detect whether data quality is improving, deteriorating, or abruptly changing around certain years,",
+      "and to identify critical breaks that might be linked to system changes, regulatory reforms, or data migration issues."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "region_missing_map",
+    title       = paste("Missingness by Region (NUTS3) –", cc),
+    description = paste(
+      "This choropleth map shows the overall share of missing values by NUTS3 region, where such information is available.",
+      "The pipeline first cleans 'buyer_nuts' codes into valid NUTS3 identifiers,",
+      "then computes the average share of missing values across all non-indicator variables for each region.",
+      "These regional missingness rates are then joined to Eurostat NUTS3 geometries for the selected country (year 2021) and plotted.",
+      "Regions shaded in darker colours have a higher share of missing information in buyer-level or contract-level fields.",
+      "Pay attention to regions where missingness is systematically high, as this may reflect regional reporting capacity issues",
+      "or gaps in how certain subnational entities interact with the procurement system."
+    )
+  )
+  
+  ## --------------------------------------------------------------------
+  ## 2. Interoperability potential 
+  ## --------------------------------------------------------------------
+    cat("#### <span style=\"color:red; font-weight:bold\">Can this data be matched to other registers in the country to ensure higher quality monitoring?</span>\n\n")
+  cat("The ability to match public procurement data with other registers significantly enhances the analytical power of research and strengthens auditing capabilities. Most importantly, access to company register or beneficial ownership data provides valuable insights into the supplier side—such as how long the firm has been operating, its profitability, the ratio of contract value to revenue, and how closely the procurement sector aligns with the company’s main area of activity.
+
+In addition, linking buyers to relevant information about the government agency can greatly improve analysis on the buyer side, for instance by incorporating data on politically exposed persons or asset declarations. Finally, geospatial information can offer further insights into the location of the company or the procuring agency, enriching both analytical and oversight capacities.\n\n", sep = "")
+  ## --------------------------------------------------------------------
+  ## 2a. Other data sources for matching (manual template)
+  ## --------------------------------------------------------------------
+  cat("#### Other types of national data available for matching\n\n")
+  cat("Requires manual filling\n\n")
+
+  other_data_tbl <- tibble::tribble(
+    ~`Data type`,                    ~`Availability (access + format)`,              ~`ID type`,                                      ~Comments,
+    "Company register",              "Open / restricted / paid + file format",       "Tax ID / other national ID / BvD ID",          "Can be used as external validation source",
+    "Beneficial ownership data",     "Open / restricted / paid + file format",       "Tax ID / other national ID / BvD ID",          "Can share data per requested list of companies",
+    "Asset and interest declarations","Open / restricted / paid + file format",      "Name of politician / Personal Tax ID / other", "Often requires manual collection or scraping"
+  )
+
+  knitr::kable(
+    other_data_tbl,
+    align = c("l", "l", "l", "l")
+  ) %>% print()
+
+  cat("\n\n")
+
+  ## --------------------------------------------------------------------
+  ## 2b. Case-specific matching analysis (manual template)
+  ## --------------------------------------------------------------------
+  cat("#### Case-specific analysis – matching rate between data sources\n\n")
+  cat("Can be filled when respective data is available\n\n")
+
+  matching_template <- tibble::tribble(
+    ~`Dataset A`,   ~`Dataset B`,      ~`Identifier`,        ~`Matching rate`,
+    "Procurement",  "Company register","Supplier ID + year", "0–100%",
+    "Company register","PEP data",     "Name",               "0–100%"
+  )
+
+  knitr::kable(
+    matching_template,
+    align = c("l", "l", "l", "c")
+  ) %>% print()
+
+  cat("\n\n**Source:** Contract-level data; company register records; other micro data\n\n")
+  ## --------------------------------------------------------------------
+  ## 2c. Case-specific matching analysis (manual template)
+  ## --------------------------------------------------------------------
+  cat("#### Interoperability potential at organization level\n\n")
+  
+  org_tbl <- results$org_interop_missing
+  
+  if (!is.null(org_tbl)) {
+    org_tbl_print <- org_tbl %>%
+      dplyr::mutate(
+        `Missing share` = dplyr::if_else(
+          is.na(missing_share),
+          "Not available (variable missing in dataset)",
+          scales::percent(missing_share, accuracy = 1)
+        )
+      ) %>%
+      dplyr::select(
+        `Organization type` = organization_type,
+        `ID type`           = id_type,
+        `Missing share`
+      )
+    
+    knitr::kable(
+      org_tbl_print,
+      align = c("l", "l", "c")
+    ) %>%
+      print()
+    
+    cat("\n\n")
+  } else {
+    cat("*Organization-level identifier fields not available in this dataset.*\n\n")
+  }
+  
+  ## --------------------------------------------------------------------
+  ## 3. Network / risky profile analysis (figs2)
+  ## --------------------------------------------------------------------
+  
+  cat("#### <span style=\"color:red; font-weight:bold\">Do companies winning contracts have risky profiles?</span>\n\n")
+  cat("This analysis seeks to identify potentially suspicious patterns in company behavior, including movements between markets or registration in tax haven jurisdictions. With access to company and beneficial ownership register data, additional and more sophisticated indicators could be developed.\n\n", sep = "")
+  
+  print_result_plot(
+    results,
+    obj_name    = "market_network_plot",
+    title       = paste("Network of Unusual Supplier Market Entries –", cc),
+    description = paste(
+      "This network visualisation maps atypical movements of suppliers across CPV product clusters.",
+      "Each node represents a 3-digit CPV cluster, i.e. a broad product or service market derived from 'lot_productcode'.",
+      "For every bidder, a 'home' CPV cluster is defined as the cluster where the bidder wins the most awards.",
+      "Entries into other clusters are treated as 'target' markets.",
+      "A bidder–cluster combination is flagged as atypical if the bidder has enough overall history, but that cluster accounts for less than 5% of their awards and at most three wins there.",
+      "For each bidder–cluster pair, the pipeline computes a Laplace-smoothed probability of observing that bidder in that cluster,",
+      "p(i|c) = (n_ic + 1) / (n_c + n_suppliers_c), where n_ic is the number of contracts for bidder i in cluster c, n_c is the total number of contracts in c, and n_suppliers_c is the number of distinct suppliers in c.",
+      "The surprise score is then defined as -log(p(i|c)) and standardised to a z-score; higher values indicate that the bidder is unusually rare in that cluster given its overall structure.",
+      "These atypical entries are aggregated at the level of home CPV cluster (source) and target CPV cluster (destination).",
+      "Directed edges are drawn only for pairs of clusters where at least four distinct bidders make such atypical entries.",
+      "Edge width reflects the number of bidders involved (n_bidders), and edge colour encodes the average standardised surprise score: thicker and redder edges mark flows where many suppliers enter a target market in a way that is collectively more unusual than average.",
+      "Node positions are based on a force-directed layout (Fruchterman–Reingold) and help visually cluster markets that are strongly connected by unusual flows.",
+      "When interpreting the figure, focus on CPV clusters with multiple thick, high-surprise edges—either as sources or as targets—as these markets may concentrate non-standard or risky supplier behaviour that merits further qualitative investigation."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "supplier_unusual_plot",
+    title       = paste("Suppliers with Unusually Diversified Market Entries –", cc),
+    description = paste(
+      "Each bar represents a supplier flagged as behaving unusually across CPV clusters.",
+      "For every bidder, the pipeline looks at all atypical CPV entries (those with high surprise z-scores) and records:",
+      "the maximum surprise z-score attained across these entries, and the number of distinct target markets entered atypically.",
+      "Bar height shows the maximum surprise z-score, while bar colour (if used) or additional labelling can indicate",
+      "how many distinct markets each supplier enters in an unusual way.",
+      "Use this figure to identify suppliers whose market expansion patterns are particularly non-standard and may warrant closer review."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "market_unusual_plot",
+    title       = paste("Markets Attracting Unusual Supplier Entries –", cc),
+    description = paste(
+      "Each point represents a 3-digit CPV cluster (a broad product or service market).",
+      "For each target cluster, the pipeline aggregates all atypical entries into that market and computes:",
+      "(i) the number of distinct suppliers entering atypically (x-axis),",
+      "(ii) the mean standardised surprise score among those entries (y-axis), and",
+      "(iii) the number of atypical awards (bubble size).",
+      "The resulting scatter/bubble plot highlights markets where many suppliers behave unusually (high x),",
+      "where entries are particularly surprising on average (high y), or both.",
+      "Clusters in the upper-right with large bubbles are markets that attract many highly atypical entries and may be especially relevant for risk-based follow-up."
+    )
+  )
+  
+  ## --------------------------------------------------------------------
+  ## 4. Buyer–supplier concentration (figs3)
+  ## --------------------------------------------------------------------
+  
+  cat("#### <span style=\"color:red; font-weight:bold\">Are there suspicious connections between buyers and suppliers?</span>\n\n")
+  cat("This analysis examines the potential existence of suspicious connections between buyers and suppliers. It can greatly benefit from access to additional registers—such as politically exposed persons (PEP) lists, interest or asset declaration databases, and beneficial ownership (BO) registers—as these can reveal direct links between suppliers and buyers. \n\n", sep = "")
+  
+  
+  print_result_plot(
+    results,
+    obj_name    = "bc_yearly",
+    title       = paste("Top Buyers by Supplier Concentration Over Time –", cc),
+    description = paste(
+      "This faceted bar chart shows, for each year, the buyers with the highest concentration of spending on a single supplier.",
+      "The pipeline groups contracts by 'tender_year', 'buyer_masterid', and 'bidder_masterid',",
+      "computes total spend per buyer–supplier pair, and then derives, for each buyer-year,",
+      "the share of spending allocated to each supplier (buyer_concentration).",
+      "For buyers with at least three suppliers, the maximum of this share is used as the concentration indicator,",
+      "and the top 30 buyer–year combinations per year are retained for plotting.",
+      "Bars represent the maximum concentration for each buyer in a given year, labels show the number of contracts,",
+      "and buyers that appear in the top list in more than one year are highlighted in red.",
+      "High and persistent concentration (especially repeated red buyers across years) may signal stable",
+      "and potentially problematic dependencies on single suppliers that merit closer investigation."
+    )
+  )
+  
+  ## --------------------------------------------------------------------
+  ## 5. Transparency / integrity and outcomes (figs4)
+  ## --------------------------------------------------------------------
+  
+    cat("#### <span style=\"color:red; font-weight:bold\">Is there an observable effect of transparency and integrity issues on prices and competition?</span>\n\n")
+  cat("While this analysis does not establish any causal relationships, it can be used to explore correlations between transparency-related measures, prices, and competitiveness. \n\n", sep = "")
+  
+  print_result_plot(
+    results,
+    obj_name    = "singleb_plot",
+    title       = paste("Predicted Single-Bidding by Missing Share –", cc),
+    description = paste(
+      "This figure summarises the estimated relationship between data missingness and the prevalence of single-bid tenders.",
+      "At the buyer–year level (for years after 2014), the pipeline computes:",
+      "(i) a cumulative missing-share indicator as the average of all variable-specific missing shares, and",
+      "(ii) the average share of single-bid tenders using the 'ind_corr_singleb' indicator (rescaled to [0,1]).",
+      "A fractional logit model with year fixed effects regresses the buyer-year single-bidding share on cumulative missingness,",
+      "controlling for the number of contracts and average contract value, and clustering standard errors by buyer type.",
+      "The line shows the predicted single-bidding share as missingness increases; the shaded band is the 95% confidence interval.",
+      "Interpret an upward slope as evidence that poorer transparency and data completeness are associated with less competition,",
+      "while paying attention to the uncertainty band and the range of missingness actually observed in the data."
+    )
+  )
+  
+  print_result_plot(
+    results,
+    obj_name    = "rel_price_plot",
+    title       = paste("Predicted Relative Price by Missing Share –", cc),
+    description = paste(
+      "This figure shows how relative prices correlate with overall missingness after controlling for key factors.",
+      "For contracts with valid price information (bid price and estimated lot value),",
+      "the pipeline computes 'relative_price' as bid_price / lot_estimatedprice and trims extreme or non-positive values.",
+      "It then constructs 'total_missing_share' as the average of NA indicators across a predefined set of core variables,",
+      "and estimates a linear fixed-effects model of relative_price on total_missing_share,",
+      "controlling for procedure type, buyer type, and year (with year fixed effects and clustering by buyer).",
+      "The line displays predicted relative prices as missingness increases, with a shaded 95% confidence interval.",
+      "An upward relationship suggests that higher missingness – a proxy for weaker transparency and data quality –",
+      "may be associated with higher prices relative to estimates; a flat line would indicate no clear price effect."
+    )
+  )
+}
+```
+
+## Country-specific results {.tabset}
+
+### Bulgaria (BG)
+```{r country-BG, echo=FALSE, results='asis'}
+render_country_results("BG", results_list)
+```
+
+### Uruguat (UY)
+
+```{r country-UY, echo=FALSE, results='asis'}
+render_country_results("UY", results_list)
+```
+
+```{r show-utils, echo=FALSE, results='asis'}
+utils_path <- "C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/integrity_utils.R"
+utils_code <- readLines(utils_path, warn = FALSE)
+cat('<details><summary><b>Show underlying code</b></summary>\n')
+cat('\n```r\n')
+cat(paste(utils_code, collapse = "\n"))
+cat('\n```\n')
+cat('</details>\n')
+```
