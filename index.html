@@ -374,7 +374,10 @@ display: none;
 Project</a>
 <ul>
 <li><a href="#about-this-repository" id="toc-about-this-repository">📘
-About this repository</a></li>
+About this repository</a>
+<ul>
+<li><a href="#key-files-and-directories" id="toc-key-files-and-directories">Key Files and Directories</a></li>
+</ul></li>
 <li><a href="#thematic-fields-and-analytical-frameworks" id="toc-thematic-fields-and-analytical-frameworks">🔍 Thematic fields
 and analytical frameworks</a></li>
 <li><a href="#data-standards-references-and-useful-resources" id="toc-data-standards-references-and-useful-resources">📚 Data
@@ -397,23 +400,52 @@ generate analytical outputs.</p>
 <hr />
 <div id="about-this-repository" class="section level2">
 <h2>📘 About this repository</h2>
-<p>This repository contains:</p>
+<p>This repository contains the full analytical pipeline and
+documentation for assessing public procurement performance, with a focus
+on transparency, administrative efficiency, and economic outcomes.</p>
+<div id="key-files-and-directories" class="section level3">
+<h3>Key Files and Directories</h3>
 <ul>
-<li><code>index.Rmd</code> — this homepage<br />
+<li><p><strong><code>index.Rmd</code></strong><br />
+Main project homepage and entry point.</p></li>
+<li><p><strong><code>src/</code></strong><br />
+Core source directory containing all analytical materials.
+Subdirectories include:</p>
+<ul>
+<li><code>utils/</code> — shared utility functions<br />
 </li>
-<li><code>integrity_report.Rmd</code> and
-<code>integrity_report.R</code>— analysis of public procurement
-transparency</li>
-<li><code>admin_eff_report.Rmd</code>and <code>admin_eff.R</code> —
-analysis of public procurement administrative efficiency</li>
-<li><code>econ_out_report.Rmd</code> and <code>econ_out.R</code> —
-analysis of public procurement economic outcomes</li>
-<li>Supporting datasets, scripts, and rendered outputs
-(<code>.html</code>, <code>.tex</code>)</li>
+<li><code>reports/</code> — analytical scripts and report sources<br />
+</li>
+<li><code>htmls/</code> — rendered HTML outputs</li>
 </ul>
-<p>All files are generated using R and the <a href="https://rmarkdown.rstudio.com/"><code>rmarkdown</code></a>
-package.</p>
+<p>The main analytical components are:</p>
+<ul>
+<li><p><strong><code>integrity_report.Rmd</code> /
+<code>integrity_report.R</code></strong><br />
+Analysis of public procurement transparency and integrity.</p></li>
+<li><p><strong><code>admin_eff_report.Rmd</code> /
+<code>admin_eff.R</code></strong><br />
+Analysis of public procurement administrative efficiency.</p></li>
+<li><p><strong><code>econ_out_report.Rmd</code> /
+<code>econ_out.R</code></strong><br />
+Analysis of public procurement economic outcomes.</p></li>
+</ul></li>
+<li><p><strong><code>helpers/</code></strong><br />
+Supplementary materials, including data standards, references, and
+additional resources.</p></li>
+<li><p><strong>Data documentation</strong></p>
+<ul>
+<li><code>dataindex.html</code><br />
+</li>
+<li><code>data.json</code><br />
+</li>
+<li><code>public_procurement_data_dictionary.xlsx</code></li>
+</ul>
+<p>Data dictionaries and metadata describing the underlying public
+procurement datasets.</p></li>
+</ul>
 <hr />
+</div>
 </div>
 <div id="thematic-fields-and-analytical-frameworks" class="section level2">
 <h2>🔍 Thematic fields and analytical frameworks</h2>
@@ -434,7 +466,7 @@ implementation performance in procurement processes.</p></li>
 Analysis</a></strong><br />
 Evaluation of procurement outcomes, including competition, pricing
 efficiency, and broader economic impacts.</p></li>
-<li><p><strong><a href="https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/src">GitHub
+<li><p><strong><a href="https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/tree/main/src">GitHub
 Repository</a></strong><br />
 Full source code, documentation, and reproducible analysis
 pipelines.</p></li>

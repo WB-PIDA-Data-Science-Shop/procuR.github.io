@@ -18,15 +18,41 @@ The data-cleaning codebase is currently under development; therefore, the analys
 
 ## 📘 About this repository
 
-This repository contains:
+This repository contains the full analytical pipeline and documentation for assessing public procurement performance, with a focus on transparency, administrative efficiency, and economic outcomes.
 
-- `index.Rmd` — this homepage  
-- `integrity_report.Rmd` and `integrity_report.R`— analysis of public procurement transparency 
-- `admin_eff_report.Rmd`and `admin_eff.R` — analysis of public procurement administrative efficiency
-- `econ_out_report.Rmd` and `econ_out.R` — analysis of public procurement economic outcomes
-- Supporting datasets, scripts, and rendered outputs (`.html`, `.tex`)
+### Key Files and Directories
 
-All files are generated using R and the [`rmarkdown`](https://rmarkdown.rstudio.com/) package.
+- **`index.Rmd`**  
+  Main project homepage and entry point.
+
+- **`src/`**  
+  Core source directory containing all analytical materials. Subdirectories include:
+  
+  - `utils/` — shared utility functions  
+  - `reports/` — analytical scripts and report sources  
+  - `htmls/` — rendered HTML outputs  
+
+  The main analytical components are:
+
+  - **`integrity_report.Rmd` / `integrity_report.R`**  
+    Analysis of public procurement transparency and integrity.
+
+  - **`admin_eff_report.Rmd` / `admin_eff.R`**  
+    Analysis of public procurement administrative efficiency.
+
+  - **`econ_out_report.Rmd` / `econ_out.R`**  
+    Analysis of public procurement economic outcomes.
+
+- **`helpers/`**  
+  Supplementary materials, including data standards, references, and additional resources.
+
+- **Data documentation**
+  
+  - `dataindex.html`  
+  - `data.json`  
+  - `public_procurement_data_dictionary.xlsx`  
+
+  Data dictionaries and metadata describing the underlying public procurement datasets.
 
 ---
 
@@ -43,7 +69,7 @@ This section provides access to the main analytical modules implemented in the p
 - **[Economic Outcome Analysis](src/htmls/econ_out_report.html)**  
   Evaluation of procurement outcomes, including competition, pricing efficiency, and broader economic impacts.
 
-- **[GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/src)**  
+- **[GitHub Repository](https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/tree/main/src)**  
   Full source code, documentation, and reproducible analysis pipelines.
 
 ---
