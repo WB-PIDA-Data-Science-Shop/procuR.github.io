@@ -52,19 +52,19 @@ This section provides access to the main analytical modules implemented in the p
 
 This section documents the data foundations of the project, including input data sources, qualitative benchmarks, methodological references, and reusable data templates supporting replication and extension.
 
-- **[Open Public Procurement Data Sources](data_source_ref.html)**  
+- **[Open Public Procurement Data Sources](helpers/data_source_ref.html)**  
   Overview of major open public procurement datasets, their coverage, update frequency, formats, and processing status.
 
-- **[Qualitative Assessment Sources](qual_assessment.html)**  
+- **[Qualitative Assessment Sources](helpers/qual_assessment.html)**  
   Comparative qualitative frameworks and expert assessments of public procurement systems.
 
-- **[Example Studies and Projects Using Procurement Quantitative Indicators](proc_ind_ex.html)**  
+- **[Example Studies and Projects Using Procurement Quantitative Indicators](helpers/proc_ind_ex.html)**  
   Empirical studies and applied projects demonstrating the use of procurement indicators across thematic areas.
 
-- **[Data Processing Approaches and Templates](data_process.html)**  
+- **[Data Processing Approaches and Templates](helpers/data_process.html)**  
   Methodological guidance, processing pipelines, and variable templates for transforming raw procurement data into analytical datasets.
 
-- **[Data Template](dataindex.html)**  
+- **[Data Template](helpers/dataindex.html)**  
   Standardized data structure and variable definitions used across analytical modules.
 
 ---
