@@ -64,7 +64,7 @@ This section documents the data foundations of the project, including input data
 - **[Data Processing Approaches and Templates](helpers/data_process.html)**  
   Methodological guidance, processing pipelines, and variable templates for transforming raw procurement data into analytical datasets.
 
-- **[Data Template](helpers/dataindex.html)**  
+- **[Data Template](dataindex.html)**  
   Standardized data structure and variable definitions used across analytical modules.
 
 ---
@@ -77,16 +77,16 @@ To reproduce the analyses on your local machine, you will need the following:
 - **RStudio** (Posit): recommended
 - **The relevant ProAct dataset**, downloaded separately
 - **Analysis files from this GitHub repository**:  
-  <https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io>
+  <https://github.com/WB-PIDA-Data-Science-Shop/procuR.github.io/src>
 
 For each thematic analysis, two files are required:
 
-- `.utils.R`  
+- `utils.R`  
   An R script that implements the data-processing and analysis pipeline.  
   This script contains parameters that may need to be adapted for new countries
   (e.g. time coverage, filtering rules, or threshold values).
 
-- `_report.Rmd`  
+- `report.Rmd`  
   An R Markdown file that generates the analytical report (HTML, DOCX, or PDF),
   including tables and figures.
 
