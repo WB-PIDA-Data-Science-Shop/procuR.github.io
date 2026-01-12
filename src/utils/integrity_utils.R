@@ -23,7 +23,7 @@ create_pipeline_config <- function(country_code) {
       min_buyer_years = 3,
       cpv_digits = 3,
       min_bidders_for_edge = 4,
-      top_n_buyers = 50,
+      top_n_buyers = 30,
       top_n_suppliers = 30,
       top_n_markets = 30,
       top_n_vars = 10,
@@ -186,6 +186,42 @@ procedure_type_labels <- c(
   "OTHER" = "Other (special or exceptional procedures)",
   "Missing procedure type" = "Missing procedure type"
 )
+
+# ========================================================================
+# PART 2A: STANDARD PLOT THEME SETTINGS
+# ========================================================================
+
+#' Standard text sizes for all plots
+#' These are calibrated for fig.width=14, fig.height=12
+PLOT_SIZES <- list(
+  base_size = 16,
+  title_size = 20,
+  subtitle_size = 14,
+  axis_title_size = 16,
+  axis_text_size = 14,
+  legend_title_size = 14,
+  legend_text_size = 13,
+  geom_text_size = 4,      # For geom_text (percentages in tiles, bar labels)
+  geom_text_large = 5,     # For larger labels
+  line_size = 1.5,
+  point_size = 3
+)
+
+#' Apply standard theme to a ggplot object
+#' 
+#' @param base_size Base font size
+#' @return ggplot2 theme
+standard_plot_theme <- function(base_size = PLOT_SIZES$base_size) {
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = PLOT_SIZES$title_size, face = "bold"),
+      plot.subtitle = ggplot2::element_text(size = PLOT_SIZES$subtitle_size),
+      axis.title = ggplot2::element_text(size = PLOT_SIZES$axis_title_size),
+      axis.text = ggplot2::element_text(size = PLOT_SIZES$axis_text_size),
+      legend.title = ggplot2::element_text(size = PLOT_SIZES$legend_title_size),
+      legend.text = ggplot2::element_text(size = PLOT_SIZES$legend_text_size)
+    )
+}
 
 # ========================================================================
 # PART 3: DATA LOADING AND VALIDATION
@@ -389,11 +425,12 @@ prepare_data <- function(df) {
 #' @param df Data frame
 #' @param cols Columns to analyze (tidy-select)
 #' @return Data frame with missing share columns
+#' Compute missing shares across columns
 summarise_missing_shares <- function(df, cols = !dplyr::starts_with("ind_")) {
   df %>%
     dplyr::summarise(
       dplyr::across(
-        .cols = {{ cols }},
+        .cols = {{ cols }} & !ends_with("_missing_share"),  # Remove dplyr:: prefix from ends_with
         .fns = ~ mean(is.na(.)),
         .names = "{.col}_missing_share"
       ),
@@ -512,31 +549,42 @@ plot_missing_bar <- function(data_long, label_lookup, title = "Missing Value Sha
       x = "Variable",
       y = "Missing Share"
     ) +
-    ggplot2::theme_minimal(base_size = 16) +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(size = 20, face = "bold"),
-      axis.title = ggplot2::element_text(size = 16),
-      axis.text = ggplot2::element_text(size = 14)
-    )
+    standard_plot_theme()
 }
 
-#' Plot missing share heatmap
-#' 
-#' @param data Data frame with x, y, and fill variables
+#' Generic missing share heatmap with dynamic sizing
+#'
+#' @param data Data frame
 #' @param x_var Name of x variable
 #' @param y_var Name of y variable
 #' @param fill_var Name of fill variable
 #' @param title Plot title
 #' @param x_lab X-axis label
 #' @param y_lab Y-axis label
-#' @return ggplot object
+#' @param height_per_row Height per y-axis item (default 0.4)
+#' @param text_size Size of percentage text in cells (default 3.5)
+#' @return ggplot object with suggested_height attribute
 plot_missing_heatmap <- function(data, x_var, y_var, fill_var,
-                                 title, x_lab, y_lab) {
+                                 title, x_lab, y_lab,
+                                 height_per_row = 0.3,
+                                 text_size = NULL) {
   x_sym <- rlang::sym(x_var)
   y_sym <- rlang::sym(y_var)
   fill_sym <- rlang::sym(fill_var)
   
-  ggplot2::ggplot(
+  # Use standard size or adjust based on data
+  if (is.null(text_size)) {
+    n_y_values <- length(unique(data[[y_var]]))
+    if (n_y_values > 40) {
+      text_size <- PLOT_SIZES$geom_text_size - 0.5
+    } else if (n_y_values > 30) {
+      text_size <- PLOT_SIZES$geom_text_size - 0.2
+    } else {
+      text_size <- PLOT_SIZES$geom_text_size
+    }
+  }
+  
+  p <- ggplot2::ggplot(
     data,
     ggplot2::aes(
       x = !!x_sym,
@@ -547,7 +595,7 @@ plot_missing_heatmap <- function(data, x_var, y_var, fill_var,
     ggplot2::geom_tile(color = "white") +
     ggplot2::geom_text(
       ggplot2::aes(label = scales::percent(!!fill_sym, accuracy = 1)),
-      size = 3,
+      size = text_size,
       color = "black"
     ) +
     ggplot2::scale_fill_gradient(
@@ -562,15 +610,13 @@ plot_missing_heatmap <- function(data, x_var, y_var, fill_var,
       x = x_lab,
       y = y_lab
     ) +
-    ggplot2::theme_minimal(base_size = 14) +
+    standard_plot_theme() +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(size = 18, face = "bold"),
-      axis.title = ggplot2::element_text(size = 14),
-      axis.text.x = ggplot2::element_text(size = 10, angle = 45, hjust = 1),
-      axis.text.y = ggplot2::element_text(size = 10)
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
     )
+  
+  p
 }
-
 #' Plot top N bar chart
 #' 
 #' @param df Data frame
@@ -610,15 +656,20 @@ plot_top_bar <- function(df, x_var, y_var, label_var,
         }
       ),
       hjust = -0.1,
-      size = 3.2,
+      size = PLOT_SIZES$geom_text_large,
       check_overlap = TRUE
     ) +
     ggplot2::coord_flip() +
-    ggplot2::theme_bw() +
     ggplot2::labs(
       title = title,
       x = x_lab,
       y = y_lab
+    ) +
+    ggplot2::theme_bw(base_size = PLOT_SIZES$base_size) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = PLOT_SIZES$title_size, face = "bold"),
+      axis.title = ggplot2::element_text(size = PLOT_SIZES$axis_title_size),
+      axis.text = ggplot2::element_text(size = PLOT_SIZES$axis_text_size)
     )
   
   if (!is.null(y_limit)) {
@@ -650,7 +701,7 @@ plot_ggeffects_line <- function(pred,
   caption_w <- if (!is.null(caption)) stringr::str_wrap(caption, width = wrap_width) else NULL
   
   ggplot2::ggplot(pred, ggplot2::aes(x, predicted)) +
-    ggplot2::geom_line(size = 1.2, color = "lightblue") +
+    ggplot2::geom_line(size = PLOT_SIZES$line_size, color = "lightblue") +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
     ggplot2::labs(
       title = title,
@@ -659,15 +710,13 @@ plot_ggeffects_line <- function(pred,
       y = y_lab,
       caption = caption_w
     ) +
-    ggplot2::theme_minimal(base_size = 14) +
+    standard_plot_theme() +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(face = "bold"),
-      plot.subtitle = ggplot2::element_text(size = 11, lineheight = 1.05),
-      plot.caption = ggplot2::element_text(size = 9, lineheight = 1.05),
+      plot.subtitle = ggplot2::element_text(size = PLOT_SIZES$subtitle_size, lineheight = 1.05),
+      plot.caption = ggplot2::element_text(size = PLOT_SIZES$subtitle_size - 2, lineheight = 1.05),
       plot.margin = ggplot2::margin(10, 18, 10, 10)
     )
 }
-
 # ========================================================================
 # PART 7: MODEL SPECIFICATION HELPERS
 # ========================================================================
@@ -1224,7 +1273,7 @@ fe_counts_note <- function(data, fe) {
 }
 
 # ========================================================================
-# PART 11: MODULE - MISSING VALUE ANALYSIS
+# PART 11: MODULE - MISSING VALUE ANALYSIS (with dynamic heights)
 # ========================================================================
 
 #' Analyze missing values
@@ -1249,7 +1298,7 @@ analyze_missing_values <- function(df, config, output_dir) {
     label_lookup = label_lookup,
     title = paste("Missing Value Share per Variable –", config$country)
   )
-  save_plot(results$overall_plot, "missing_shares")
+  save_plot(results$overall_plot, "missing_shares", width = 10, height = 8)  # FIXED HEIGHT
   
   # By buyer type
   if (validate_required_columns(df, "buyer_buyertype", "missing by buyer type")) {
@@ -1267,10 +1316,13 @@ analyze_missing_values <- function(df, config, output_dir) {
       fill_var = "missing_share",
       title = paste("Missing value share per variable by buyer type –", config$country),
       x_lab = "Buyer type",
-      y_lab = "Variable"
+      y_lab = "Variable",
+      height_per_row = 0.35,
+      text_size = 3
     )
   }
   
+  # Top buyers with highest missing share
   # Top buyers with highest missing share
   if (validate_required_columns(df, c("buyer_masterid", "buyer_buyertype"), "top missing buyers")) {
     results$top_buyers_missing <- df %>%
@@ -1284,14 +1336,17 @@ analyze_missing_values <- function(df, config, output_dir) {
       dplyr::arrange(dplyr::desc(missing_share)) %>%
       dplyr::slice_head(n = config$thresholds$top_n_buyers) %>%
       dplyr::mutate(
+        # ADDED: Apply buyer group transformation
+        buyer_group = add_buyer_group(buyer_buyertype),
+        buyer_group_label = as.character(buyer_group),
+        # UPDATED: Use buyer_group_label instead of buyer_buyertype
         buyer_label = paste0(
           buyer_masterid, "\n",
-          ifelse(is.na(buyer_buyertype), "Unknown Type", buyer_buyertype)
+          buyer_group_label  # CHANGED from buyer_buyertype
         ),
         buyer_label_short = dplyr::if_else(
           nchar(buyer_masterid) > 20,
-          paste0(substr(buyer_masterid, 1, 20), "…\n",
-                 ifelse(is.na(buyer_buyertype), "Unknown Type", buyer_buyertype)),
+          paste0(substr(buyer_masterid, 1, 20), "…\n", buyer_group_label),  # CHANGED
           buyer_label
         )
       )
@@ -1310,7 +1365,7 @@ analyze_missing_values <- function(df, config, output_dir) {
     )
   }
   
-  # Combined buyers plot
+  # Combined buyers plot - USE FIXED LARGE HEIGHT
   if (!is.null(results$by_buyer_plot) && !is.null(results$top_buyers_plot)) {
     results$combined_buyers_plot <- results$by_buyer_plot + results$top_buyers_plot +
       patchwork::plot_layout(nrow = 2)
@@ -1318,12 +1373,12 @@ analyze_missing_values <- function(df, config, output_dir) {
     save_plot(
       results$combined_buyers_plot,
       "buyers_missing",
-      width = config$plots$width_large,
-      height = config$plots$height_large
+      width = 12,
+      height = 16  # FIXED LARGE HEIGHT (increased from 12)
     )
   }
   
-  # By procedure type
+  # By procedure type - USE FIXED HEIGHT
   if (validate_required_columns(df, "tender_proceduretype", "missing by procedure type")) {
     results$by_procedure <- df %>%
       dplyr::mutate(
@@ -1366,10 +1421,12 @@ analyze_missing_values <- function(df, config, output_dir) {
       fill_var = "missing_share",
       title = paste("Missing value share per variable by procedure type –", config$country),
       x_lab = "Procedure Type",
-      y_lab = "Variable"
+      y_lab = "Variable",
+      height_per_row = 0.35,
+      text_size = 3
     )
     
-    save_plot(results$by_procedure_plot, "missing_by_proc")
+    save_plot(results$by_procedure_plot, "missing_by_proc", width = 12, height = 16)  # FIXED LARGE HEIGHT
   }
   
   # Missing correlations
@@ -1397,12 +1454,12 @@ analyze_missing_values <- function(df, config, output_dir) {
       y = "Variable",
       fill = "Correlation"
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    standard_plot_theme() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)
     )
   
-  save_plot(results$correlation_plot, "missing_corr")
+  save_plot(results$correlation_plot, "missing_corr", width = 10, height = 8)  # FIXED
   
   results$correlation_top <- miss_corr_long %>%
     dplyr::filter(x != y) %>%
@@ -1427,8 +1484,8 @@ analyze_missing_values <- function(df, config, output_dir) {
     results$by_year_plot <- results$by_year %>%
       dplyr::filter(variable_label %in% top_vars) %>%
       ggplot2::ggplot(ggplot2::aes(x = tender_year, y = missing_share, color = variable_label)) +
-      ggplot2::geom_line(size = 1.2) +
-      ggplot2::geom_point(size = 2) +
+      ggplot2::geom_line(size = PLOT_SIZES$line_size) +
+      ggplot2::geom_point(size = PLOT_SIZES$point_size) +
       ggplot2::scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       ggplot2::labs(
         title = paste("Trends in missing shares over time (top variables) –", config$country),
@@ -1436,18 +1493,18 @@ analyze_missing_values <- function(df, config, output_dir) {
         y = "Missing share",
         color = "Variable"
       ) +
-      ggplot2::theme_minimal(base_size = 14) +
+      standard_plot_theme() +
       ggplot2::theme(
-        plot.title = ggplot2::element_text(size = 18, face = "bold"),
-        legend.position = "bottom"
-      )
+        legend.position = "bottom",
+        legend.key.height = ggplot2::unit(0.5, "cm")
+      ) +
+      ggplot2::guides(color = ggplot2::guide_legend(ncol = 2))
     
-    save_plot(results$by_year_plot, "year_miss")
+    save_plot(results$by_year_plot, "year_miss", width = 10, height = 6)  # FIXED
   }
   
   results
 }
-
 # ========================================================================
 # PART 12: MODULE - INTEROPERABILITY ANALYSIS
 # ========================================================================
@@ -1592,7 +1649,7 @@ analyze_buyer_supplier_concentration <- function(df, config) {
     ggplot2::geom_text(
       ggplot2::aes(label = total_contracts, color = repeated),
       hjust = -0.1,
-      size = 2.8,
+      size = PLOT_SIZES$geom_text_size - 0.5,
       show.legend = FALSE
     ) +
     ggplot2::coord_flip() +
@@ -1604,12 +1661,21 @@ analyze_buyer_supplier_concentration <- function(df, config) {
       labels = c("No", "Yes")
     ) +
     ggplot2::scale_color_manual(values = c(`FALSE` = "black", `TRUE` = "red4")) +
-    ggplot2::theme_bw(base_size = 11) +
     ggplot2::labs(
       title = paste("Top 30 Buyers by Maximum Spending Concentration per Year –", config$country),
       subtitle = "Red bars = buyers that appear in the top list in multiple years",
       x = "Buyer ID",
       y = "Max share of spending to one supplier"
+    ) +
+    ggplot2::theme_bw(base_size = PLOT_SIZES$base_size) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = PLOT_SIZES$title_size, face = "bold"),
+      plot.subtitle = ggplot2::element_text(size = PLOT_SIZES$subtitle_size),
+      axis.text = ggplot2::element_text(size = PLOT_SIZES$axis_text_size - 2),
+      axis.title = ggplot2::element_text(size = PLOT_SIZES$axis_title_size),
+      strip.text = ggplot2::element_text(size = PLOT_SIZES$subtitle_size),
+      legend.text = ggplot2::element_text(size = PLOT_SIZES$legend_text_size),
+      legend.title = ggplot2::element_text(size = PLOT_SIZES$legend_title_size)
     ) +
     ggplot2::ylim(0, 1.05)
   
@@ -2039,6 +2105,7 @@ analyze_markets <- function(df, config, output_dir) {
   if (nrow(edges_markets) > 0) {
     g_markets <- igraph::graph_from_data_frame(edges_markets, directed = TRUE)
     
+    # In analyze_markets function, update network plot:
     results$network_plot <- ggraph::ggraph(g_markets, layout = "fr") +
       ggraph::geom_edge_link(
         ggplot2::aes(width = n_bidders, colour = mean_surprise),
@@ -2046,8 +2113,8 @@ analyze_markets <- function(df, config, output_dir) {
         end_cap = ggraph::circle(2, "mm"),
         alpha = 0.6
       ) +
-      ggraph::geom_node_point(size = 4, colour = "darkorange") +
-      ggraph::geom_node_text(ggplot2::aes(label = name), repel = TRUE, size = 3) +
+      ggraph::geom_node_point(size = PLOT_SIZES$point_size + 1, colour = "darkorange") +
+      ggraph::geom_node_text(ggplot2::aes(label = name), repel = TRUE, size = PLOT_SIZES$geom_text_size) +
       ggraph::scale_edge_width(range = c(0.2, 2)) +
       ggraph::scale_edge_colour_continuous(
         low = "green",
@@ -2058,9 +2125,13 @@ analyze_markets <- function(df, config, output_dir) {
         title = paste("Network of unusual market entries –", config$country),
         subtitle = "Nodes represent CPV clusters; edges show atypical flow of bidders"
       ) +
-      ggplot2::theme_void()
-    
-    save_plot(results$network_plot, "supp_net")
+      ggplot2::theme_void(base_size = PLOT_SIZES$base_size) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(size = PLOT_SIZES$title_size, face = "bold"),
+        plot.subtitle = ggplot2::element_text(size = PLOT_SIZES$subtitle_size),
+        legend.text = ggplot2::element_text(size = PLOT_SIZES$legend_text_size),
+        legend.title = ggplot2::element_text(size = PLOT_SIZES$legend_title_size)
+      )
   }
   
   # Supplier-level unusual behavior
@@ -2096,7 +2167,7 @@ analyze_markets <- function(df, config, output_dir) {
       x = "Supplier ID",
       y = "Max surprise z-score"
     ) +
-    ggplot2::theme_bw(base_size = 11)
+    standard_plot_theme()
   
   save_plot(results$supplier_unusual_plot, "supp_unusual_suppliers")
   
@@ -2126,7 +2197,7 @@ analyze_markets <- function(df, config, output_dir) {
     )
   ) +
     ggplot2::geom_point(alpha = 0.85) +
-    ggrepel::geom_text_repel(size = 3, colour = "gray20") +
+    ggrepel::geom_text_repel(size = PLOT_SIZES$geom_text_size, colour = "gray20") +
     ggplot2::scale_size_continuous(name = "No. atypical awards", range = c(3, 12)) +
     ggplot2::scale_colour_gradientn(
       colours = c("#2c7bb6", "#abd9e9", "#ffffbf", "#fdae61", "#d7191c"),
@@ -2138,7 +2209,7 @@ analyze_markets <- function(df, config, output_dir) {
       x = "Number of suppliers entering atypically",
       y = "Mean surprise z-score"
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    standard_plot_theme()
   
   save_plot(results$market_unusual_plot, "supp_unusual_markets")
   

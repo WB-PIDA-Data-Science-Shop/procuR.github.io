@@ -75,9 +75,11 @@ knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
   warning = FALSE,
-  fig.width = 10,
-  fig.height = 6
+  fig.width = 14,    
+  fig.height = 12,   
+  out.width = "100%"
 )
+
 
 # Source your helper + pipeline functions
 source("C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/src/utils/integrity_utils.R")
@@ -129,7 +131,6 @@ results_list <- purrr::map(country_codes, function(cc) {
 names(results_list) <- country_codes
 ```
 
-```{r helpers-render-tbl, echo=FALSE, message=FALSE, warning=FALSE}
 ```{r helpers-render-tbl, echo=FALSE, message=FALSE, warning=FALSE}
 render_tbl <- function(x,
                        digits = 3,
@@ -465,41 +466,37 @@ print_sensitivity_bundle_compact <- function(results,
 ```
 
 ```{r helpers-report, echo=FALSE}
-# FIXED: Helper to access nested module results
 print_result_plot <- function(results,
                               obj_name,
                               title,
                               description = NULL,
-                              missing_msg = "Figure not produced: no information or key variable is missing for the plot.") {
+                              missing_msg = "Figure not produced: no information or key variable is missing for the plot.",
+                              fig.width = NULL,
+                              fig.height = NULL) {
   
   # Try to find the object in various module locations
   obj <- NULL
   
-  # Direct access first
+  # [Keep your existing search logic here - Direct access, missing, competition, markets, prices, regional, interoperability]
+  
   if (!is.null(results[[obj_name]])) {
     obj <- results[[obj_name]]
   }
-  # Try in missing module
   else if (!is.null(results$missing) && !is.null(results$missing[[obj_name]])) {
     obj <- results$missing[[obj_name]]
   }
-  # Try in competition module
   else if (!is.null(results$competition) && !is.null(results$competition[[obj_name]])) {
     obj <- results$competition[[obj_name]]
   }
-  # Try in markets module
   else if (!is.null(results$markets) && !is.null(results$markets[[obj_name]])) {
     obj <- results$markets[[obj_name]]
   }
-  # Try in prices module
   else if (!is.null(results$prices) && !is.null(results$prices[[obj_name]])) {
     obj <- results$prices[[obj_name]]
   }
-  # Try in regional module
   else if (!is.null(results$regional) && !is.null(results$regional[[obj_name]])) {
     obj <- results$regional[[obj_name]]
   }
-  # Try in interoperability module
   else if (!is.null(results$interoperability) && !is.null(results$interoperability[[obj_name]])) {
     obj <- results$interoperability[[obj_name]]
   }
@@ -512,17 +509,38 @@ print_result_plot <- function(results,
     cat(description, "\n\n")
   }
   
+  # NEW: If custom dimensions provided, set them for this chunk
+  if (!is.null(fig.width) || !is.null(fig.height)) {
+    old_opts <- list()
+    if (!is.null(fig.width)) {
+      old_opts$fig.width <- knitr::opts_current$get("fig.width")
+      knitr::opts_chunk$set(fig.width = fig.width)
+    }
+    if (!is.null(fig.height)) {
+      old_opts$fig.height <- knitr::opts_current$get("fig.height")
+      knitr::opts_chunk$set(fig.height = fig.height)
+    }
+  }
+  
   # If it's a ggplot, print it
   if (inherits(obj, "gg")) {
     print(obj)
     cat("\n\n")
   } else if (is.null(obj)) {
-    # If it's NULL -> no plot
     cat("*", missing_msg, "*\n\n", sep = "")
   } else {
-    # Something exists but is not a ggplot
     cat("*Object exists but is not a plot (class: ", paste(class(obj), collapse = ", "),
         "). Nothing to draw here.*\n\n", sep = "")
+  }
+  
+  # NEW: Restore old options if we changed them
+  if (exists("old_opts") && length(old_opts) > 0) {
+    if (!is.null(old_opts$fig.width)) {
+      knitr::opts_chunk$set(fig.width = old_opts$fig.width)
+    }
+    if (!is.null(old_opts$fig.height)) {
+      knitr::opts_chunk$set(fig.height = old_opts$fig.height)
+    }
   }
 }
 ```
