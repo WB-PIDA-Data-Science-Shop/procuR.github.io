@@ -1,0 +1,17 @@
+/* Give the content some breathing room */
+body {
+  margin: 0;               /* fine to leave zero here */
+  padding: 0;              /* we’ll pad the main container instead */
+}
+
+/* Main content container added by rmarkdown */
+.main-container {
+  max-width: 1200px;       /* or 900px if you prefer narrower text */
+  margin: 0 auto;          /* center horizontally */
+  padding: 20px 40px;      /* top/bottom, left/right padding */
+}
+
+/* Optional: space from top of the window */
+html, body {
+  background-color: #ffffff;
+}

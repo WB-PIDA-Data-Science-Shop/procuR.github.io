@@ -4,8 +4,10 @@ author: "Viktoriia Poltoratskaia"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    code_folding: hide   # or "show"
+    code_folding: hide
+    css: custom.css
 ---
+
 This analysis examines transparency and accountability challenges in public procurement systems using procurement data. The tool provides a framework for assessing the extent to which regulatory requirements are reflected in actual implementation, focusing on transparency and accountability as key determinants of procurement integrity and corruption risk. Beyond evaluating data availability and accessibility, the analysis proposes tests to identify potential collusive relationships between buyers and suppliers and assesses how transparency affects competition and price overruns. 
 
 ### <span style="color:red; font-weight:bold">Is there a legal mandate to ensure information accessibility?</span>
@@ -68,29 +70,28 @@ Requires manual filling
 
 
 **Source:** National platform website
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo   = TRUE,     # show code; set to FALSE if you want a clean report
+  echo = TRUE,
   message = FALSE,
   warning = FALSE,
-  fig.width  = 10,
+  fig.width = 10,
   fig.height = 6
 )
-knitr::opts_chunk$set(fig.width = 10, fig.height = 8)
 
 # Source your helper + pipeline functions
-source("C:/Users/wb589991/OneDrive - WBG/Documents/temp_inspect_repo/integrity_utils.R")
+source("C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/src/utils/integrity_utils.R")
 
 # Load packages
 required_packages <- c(
   "data.table", "tidyverse", "patchwork", "corrr",
   "giscoR", "eurostat", "sf", "tidytext",
-  "fixest", "ggeffects", "igraph", "ggraph", "purrr"
+  "fixest", "ggeffects", "igraph", "ggraph", "purrr",
+  "kableExtra", "ggrepel"  # ADDED ggrepel
 )
 
 load_packages <- function(pkgs) {
-  installed  <- rownames(installed.packages())
+  installed <- rownames(installed.packages())
   to_install <- setdiff(pkgs, installed)
   if (length(to_install) > 0) install.packages(to_install)
   invisible(lapply(pkgs, library, character.only = TRUE))
@@ -100,36 +101,408 @@ load_packages(required_packages)
 ```
 
 ```{r multi-country-setup, include=FALSE}
-base_dir      <- "C:/Users/wb589991/Downloads"
-country_codes <- c("BG", "UY")   # <- add more here if needed: "BG", "UY", "RO", ...
+base_dir <- "C:/Users/wb589991/Downloads"
+country_codes <- c("BG", "UY")
 
-results_list <- map(country_codes, function(cc) {
-  input_dir  <- file.path(base_dir, paste0(cc, "_export.csv"))
+results_list <- purrr::map(country_codes, function(cc) {
+  # Input: Read from C:/Users/wb589991/Downloads/COUNTRYCODE_export/COUNTRYCODE_export.csv
+  input_dir <- file.path(base_dir, paste0(cc, "_export"))
   input_path <- file.path(input_dir, paste0(cc, "_export.csv"))
-  output_dir <- input_dir
   
+  # Output: Save to C:/Users/wb589991/Downloads/COUNTRYCODE_export/output/
+  output_dir <- file.path(input_dir, "output")
+  
+  # Create output directory if it doesn't exist
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
   
+  # Load data from the CSV file
   df <- load_data(input_path)
+  
+  # Run pipeline
   run_integrity_pipeline(
-    df           = df,
+    df = df,
     country_code = cc,
-    output_dir   = output_dir
+    output_dir = output_dir
   )
 })
 
 names(results_list) <- country_codes
 ```
 
+```{r helpers-render-tbl, echo=FALSE, message=FALSE, warning=FALSE}
+```{r helpers-render-tbl, echo=FALSE, message=FALSE, warning=FALSE}
+render_tbl <- function(x,
+                       digits = 3,
+                       caption = NULL,
+                       max_rows = 30,
+                       collapse_html = TRUE,
+                       details_open = FALSE) {
+
+  if (is.null(x) || (is.data.frame(x) && nrow(x) == 0L)) {
+    cat("*No rows to display.*\n\n")
+    return(invisible(NULL))
+  }
+
+  x <- as.data.frame(x)
+
+  if (!is.null(max_rows) && is.finite(max_rows) && nrow(x) > max_rows) {
+    x_show <- x[seq_len(max_rows), , drop = FALSE]
+    note <- paste0("Showing first ", max_rows, " of ", nrow(x), " rows.")
+  } else {
+    x_show <- x
+    note <- NULL
+  }
+
+  is_html <- knitr::is_html_output()
+  is_latex <- knitr::is_latex_output()
+
+  k <- knitr::kable(
+    x_show,
+    format = if (is_html) "html" else if (is_latex) "latex" else "simple",
+    digits = digits,
+    caption = caption,
+    booktabs = is_latex,
+    longtable = is_latex
+  )
+
+  if (requireNamespace("kableExtra", quietly = TRUE)) {
+    if (is_html) {
+      k <- kableExtra::kable_styling(
+        k,
+        full_width = FALSE,
+        bootstrap_options = c("striped", "hover", "condensed", "responsive")
+      )
+    } else if (is_latex) {
+      k <- kableExtra::kable_styling(k, latex_options = c("hold_position"))
+    }
+  }
+
+  if (is_html && collapse_html) {
+    cat(sprintf(
+      "<details %s>\n<summary>%s</summary>\n\n",
+      if (details_open) "open" else "",
+      if (!is.null(caption)) caption else "Table"
+    ))
+    cat(k)
+    cat("\n\n</details>\n\n")
+  } else {
+    cat(k)
+    cat("\n\n")
+  }
+
+  if (!is.null(note)) cat(paste0("*", note, "*\n\n"))
+
+  invisible(NULL)
+}
+
+# -------------------------
+# Safety helpers
+# -------------------------
+safe_first_num <- function(x) {
+  if (is.null(x) || length(x) == 0) return(NA_real_)
+  suppressWarnings(as.numeric(x[[1]]))
+}
+
+has_rows <- function(df) is.data.frame(df) && nrow(df) > 0
+
+# Optional: if some countries use share_p_le_0.10 vs share_p_le_0.1 etc.
+get_first_num <- function(df, candidates) {
+  if (!is.data.frame(df)) return(NA_real_)
+  for (nm in candidates) {
+    if (nm %in% names(df)) return(safe_first_num(df[[nm]]))
+  }
+  NA_real_
+}
+
+print_sensitivity_bundle_compact <- function(results,
+                                             bundle_name,
+                                             title = NULL,
+                                             description = NULL,
+                                             max_rows = 20,
+                                             collapse_html = TRUE,
+                                             missing_msg = "Sensitivity bundle not available.") {
+  # Access nested module results
+  bun <- NULL
+
+  if (bundle_name == "singleb_sensitivity" && !is.null(results$competition)) {
+    bun <- results$competition[[bundle_name]]
+  } else if (bundle_name == "relprice_sensitivity" && !is.null(results$prices)) {
+    bun <- results$prices[[bundle_name]]
+  } else {
+    bun <- results[[bundle_name]]
+  }
+
+  # Check if bundle exists
+  if (is.null(bun) || length(bun) == 0) {
+    cat("*", missing_msg, "*\n\n", sep = "")
+    return(invisible(NULL))
+  }
+
+  # Require overall panel to interpret anything
+  if (!has_rows(bun$overall)) {
+    cat("*", missing_msg, "*\n\n", sep = "")
+    return(invisible(NULL))
+  }
+
+  # Print title if provided
+  if (!is.null(title)) {
+    cat("#### ", title, "\n\n", sep = "")
+  }
+
+  # Print description if provided
+  if (!is.null(description)) {
+    cat(description, "\n\n")
+  }
+
+  # ====================================================================
+  # Interpretive guidance
+  # ====================================================================
+  cat("**What is sensitivity analysis?**\n\n")
+  cat("Sensitivity analysis tests whether the relationship between missing data and the outcome ",
+      "(single-bidding or relative prices) holds across different modeling choices. ",
+      "A robust finding should be consistent across reasonable variations in:\n\n")
+  cat("- **Fixed effects (FE):** Controls for unobserved differences across buyers, years, etc.\n")
+  cat("- **Clustering:** Adjusts standard errors for correlation within groups\n")
+  cat("- **Control variables:** Additional factors that might affect the outcome\n\n")
+
+  # ====================================================================
+  # Overall summary
+  # ====================================================================
+  summary_panel <- dplyr::bind_cols(bun$overall, bun$sign)
+
+  cat("**Overall Summary:**\n\n")
+  render_tbl(summary_panel, caption = NULL, max_rows = Inf, collapse_html = FALSE)
+
+  # ====================================================================
+  # Interpretation (no duplicates; extract once)
+  # ====================================================================
+  cat("\n**How to interpret:**\n\n")
+
+  # ---- Extract summary stats ONCE (NA-safe) ----
+  n_specs      <- get_first_num(bun$overall, c("n_specs"))
+  share_pos    <- get_first_num(bun$overall, c("share_positive"))
+  share_neg    <- get_first_num(bun$overall, c("share_negative"))
+
+  median_est   <- get_first_num(bun$overall, c("median_estimate"))
+  median_p     <- get_first_num(bun$overall, c("median_pvalue"))
+  median_str   <- get_first_num(bun$overall, c("median_strength"))
+
+  share_p05    <- get_first_num(bun$overall, c("share_p_le_0.05"))
+  share_p10    <- get_first_num(bun$overall, c("share_p_le_0.1", "share_p_le_0.10"))
+  share_p20    <- get_first_num(bun$overall, c("share_p_le_0.2", "share_p_le_0.20"))
+
+  sign_stable  <- get_first_num(bun$overall, c("share_sign_stable"))
+  n_nonzero    <- get_first_num(bun$overall, c("n_nonzero"))
+
+  # ---- Print metric descriptions (only if available) ----
+  if (!is.na(n_specs))   cat("- **n_specs (", n_specs, "):** Number of alternative model specifications tested\n", sep = "")
+  if (!is.na(n_nonzero)) cat("- **n_nonzero (", n_nonzero, "):** Number of specifications with non-zero estimates (often equals n_specs)\n", sep = "")
+
+  if (!is.na(share_pos)) cat("- **share_positive (", scales::percent(share_pos, accuracy = 0.1), "):** Share of models where missingness is associated with a *higher* outcome\n", sep = "")
+  if (!is.na(share_neg)) cat("- **share_negative (", scales::percent(share_neg, accuracy = 0.1), "):** Share of models where missingness is associated with a *lower* outcome\n", sep = "")
+
+  if (!is.na(median_est)) cat("- **median_estimate (", sprintf("%.3f", median_est), "):** Typical effect size across models (negative implies a negative association)\n", sep = "")
+  if (!is.na(median_str)) cat("- **median_strength (", sprintf("%.3f", median_str), "):** Median standardized strength (closer to 0 = weaker)\n", sep = "")
+
+  if (!is.na(median_p))  cat("- **median_pvalue (", sprintf("%.3f", median_p), "):** Median p-value across all specifications\n", sep = "")
+  if (!is.na(share_p05)) cat("- **share_p_le_0.05 (", scales::percent(share_p05, accuracy = 0.1), "):** Share of models significant at p ≤ 0.05\n", sep = "")
+  if (!is.na(share_p10)) cat("- **share_p_le_0.10 (", scales::percent(share_p10, accuracy = 0.1), "):** Share of models significant at p ≤ 0.10\n", sep = "")
+  if (!is.na(share_p20)) cat("- **share_p_le_0.20 (", scales::percent(share_p20, accuracy = 0.1), "):** Share of models significant at p ≤ 0.20 (lenient threshold)\n", sep = "")
+
+  if (!is.na(sign_stable)) {
+    cat("- **share_sign_stable (", sign_stable, "):** ",
+        if (sign_stable == 1) "All estimates have the same sign (stable direction)" else "Sign changes across models (direction is unstable)",
+        "\n", sep = "")
+  }
+
+  cat("\n")
+
+  # ---- Direction-aware interpretation (NA-safe) ----
+  dominant_dir <- NA_character_
+  if (!is.na(share_pos) && !is.na(share_neg)) {
+    if (share_pos > share_neg) dominant_dir <- "positive"
+    else if (share_neg > share_pos) dominant_dir <- "negative"
+    else dominant_dir <- "mixed"
+  }
+
+  if (isTRUE(dominant_dir == "positive" && sign_stable == 1 && share_p10 >= 0.5 && share_pos >= 0.7)) {
+    cat("- **✓ Strong evidence (positive):** Most specifications show a consistent, statistically significant positive association\n")
+  } else if (isTRUE(dominant_dir == "negative" && sign_stable == 1 && share_p10 >= 0.5 && share_neg >= 0.7)) {
+    cat("- **✓ Strong evidence (negative):** Most specifications show a consistent, statistically significant negative association\n")
+  } else if (isTRUE(dominant_dir %in% c("positive","negative") && share_p10 >= 0.3 &&
+                    ((dominant_dir=="positive" && share_pos>=0.6) || (dominant_dir=="negative" && share_neg>=0.6)))) {
+    cat("- **⚠ Moderate evidence:** Direction is mostly consistent, but statistical significance varies across specifications\n")
+  } else if (isTRUE(dominant_dir %in% c("positive","negative") && sign_stable == 0 &&
+                    ((dominant_dir=="positive" && share_pos>=0.6) || (dominant_dir=="negative" && share_neg>=0.6)))) {
+    cat("- **⚠ Directionally dominant but unstable:** Most estimates point the same way, but the sign flips in some specifications\n")
+  } else if (!is.na(dominant_dir)) {
+    cat("- **✗ No robust relationship:** Results are mixed or highly sensitive to model specification\n")
+  } else {
+    cat("- **ℹ Not enough information:** Summary statistics are missing for this country\n")
+  }
+
+  cat("\n")
+
+  # ====================================================================
+  # Collapsible details section
+  # ====================================================================
+  if (knitr::is_html_output() && collapse_html) {
+    cat("<details><summary><b>Show detailed breakdown by model components</b></summary>\n\n")
+  }
+
+  # By Fixed Effects
+  cat("**By Fixed Effects (FE):**\n\n")
+  cat("Fixed effects control for unobserved heterogeneity. For example:\n")
+  cat("- **Buyer FE:** Controls for buyer-specific characteristics (e.g., capacity, procurement culture)\n")
+  cat("- **Year FE:** Controls for time trends (e.g., economic conditions, regulatory changes)\n")
+  cat("- **Buyer + Year FE:** Controls for both simultaneously\n\n")
+
+  if (has_rows(bun$by_fe)) {
+    render_tbl(bun$by_fe, caption = NULL, max_rows = max_rows, collapse_html = FALSE)
+  } else {
+    cat("*No fixed-effects breakdown available.*\n\n")
+  }
+
+  cat("\n*Look for: Which fixed effect structure gives the most significant results? ",
+      "If results hold across all FE specifications, the finding is very robust.*\n\n")
+
+  # By Clustering
+  cat("**By Clustering:**\n\n")
+  cat("Clustering adjusts standard errors for correlation within groups:\n")
+  cat("- **Buyer clustering:** Accounts for correlation within the same buyer over time\n")
+  cat("- **Year clustering:** Accounts for common shocks affecting all buyers in a year\n")
+  cat("- **None:** Assumes all observations are independent (most restrictive)\n\n")
+
+  if (has_rows(bun$by_cluster)) {
+    render_tbl(bun$by_cluster, caption = NULL, max_rows = max_rows, collapse_html = FALSE)
+  } else {
+    cat("*No clustering breakdown available.*\n\n")
+  }
+
+  cat("\n*Look for: If results remain significant even with buyer clustering (most conservative), ",
+      "the evidence is strong.*\n\n")
+
+  # By Controls
+  cat("**By Controls:**\n\n")
+  cat("Control variables are additional factors that might affect the outcome:\n")
+  cat("- **x_only:** No controls (only missingness and fixed effects)\n")
+  cat("- **base:** Core controls (contract value, buyer type, procedure type)\n")
+  cat("- **base_extra:** Extended controls (additional economic/organizational factors)\n\n")
+
+  if (has_rows(bun$by_controls)) {
+    render_tbl(bun$by_controls, caption = NULL, max_rows = max_rows, collapse_html = FALSE)
+  } else {
+    cat("*No controls breakdown available.*\n\n")
+  }
+
+  cat("\n*Look for: Does the relationship hold even with rich controls? ",
+      "If yes, it's less likely to be driven by omitted variables.*\n\n")
+
+  # Outcome classes
+  cat("**Classification of Model Results:**\n\n")
+  cat("This table shows how many models fall into each category:\n\n")
+
+  if (has_rows(bun$classes)) {
+    render_tbl(bun$classes, caption = NULL, max_rows = Inf, collapse_html = FALSE)
+  } else {
+    cat("*No classification table available.*\n\n")
+  }
+
+  cat("\n*Ideal: Most models should be 'Positive & significant'. ",
+      "If many are 'Negative & significant' or evenly split, the evidence is inconclusive.*\n\n")
+
+  # Top cells
+  cat("**Top Model Specifications (by success rate):**\n\n")
+  cat("These are the combinations of fixed effects, clustering, and controls that most consistently ",
+      "produce significant results:\n\n")
+
+  if (has_rows(bun$top_cells)) {
+    render_tbl(bun$top_cells, caption = NULL, max_rows = max_rows, collapse_html = FALSE)
+  } else {
+    cat("*No top-cells table available.*\n\n")
+  }
+
+  cat("\n*Look for: Combinations with high share_pok (share of p-values ≤ 0.10). ",
+      "These are the most reliable specification choices for this dataset.*\n\n")
+
+  if (knitr::is_html_output() && collapse_html) {
+    cat("\n</details>\n\n")
+  }
+
+  # ====================================================================
+  # Final interpretation summary (direction-aware)
+  # ====================================================================
+  cat("---\n\n")
+  cat("**Summary for Decision-Makers:**\n\n")
+
+  if (isTRUE(dominant_dir == "positive" && sign_stable == 1 && share_p10 >= 0.5 && share_pos >= 0.7)) {
+    cat("✓ **Strong and robust evidence (positive).** Missingness is associated with a higher outcome in most specifications, and the direction is stable.\n\n")
+  } else if (isTRUE(dominant_dir == "negative" && sign_stable == 1 && share_p10 >= 0.5 && share_neg >= 0.7)) {
+    cat("✓ **Strong and robust evidence (negative).** Missingness is associated with a lower outcome in most specifications, and the direction is stable.\n\n")
+  } else if (isTRUE(dominant_dir %in% c("positive","negative") && share_p10 >= 0.3 &&
+                    ((dominant_dir=="positive" && share_pos>=0.6) || (dominant_dir=="negative" && share_neg>=0.6)))) {
+    cat("⚠ **Moderate evidence.** The relationship is mostly in one direction, but statistical significance varies across specifications.\n\n")
+  } else if (isTRUE(dominant_dir %in% c("positive","negative") && sign_stable == 0 &&
+                    ((dominant_dir=="positive" && share_pos>=0.6) || (dominant_dir=="negative" && share_neg>=0.6)))) {
+    cat("⚠ **Directionally dominant but unstable.** Most estimates point the same way, but the sign flips in some specifications.\n\n")
+  } else if (!is.na(dominant_dir)) {
+    cat("✗ **No robust relationship.** Results are mixed or highly sensitive to model specification.\n\n")
+  } else {
+    cat("ℹ **Sensitivity summary not available for this country.**\n\n")
+  }
+
+  cat("**Key statistics:**\n")
+  if (!is.na(share_pos))   cat("- ", scales::percent(share_pos, accuracy = 1), " of models are positive\n", sep = "")
+  if (!is.na(share_neg))   cat("- ", scales::percent(share_neg, accuracy = 1), " of models are negative\n", sep = "")
+  if (!is.na(share_p10))   cat("- ", scales::percent(share_p10, accuracy = 1), " of models are statistically significant (p ≤ 0.10)\n", sep = "")
+  if (!is.na(median_est))  cat("- Median effect size: ", sprintf("%.3f", median_est), "\n", sep = "")
+  if (!is.na(median_p))    cat("- Median p-value: ", sprintf("%.3f", median_p), "\n", sep = "")
+  if (!is.na(sign_stable)) cat("- Sign stability: ", if (sign_stable == 1) "stable" else "unstable", "\n", sep = "")
+  cat("\n")
+
+  invisible(NULL)
+}
+```
+
 ```{r helpers-report, echo=FALSE}
-# Helper to print a ggplot (or message) plus text around it
+# FIXED: Helper to access nested module results
 print_result_plot <- function(results,
                               obj_name,
                               title,
                               description = NULL,
                               missing_msg = "Figure not produced: no information or key variable is missing for the plot.") {
-  # Pull object from list by name
-  obj <- results[[obj_name]]
+  
+  # Try to find the object in various module locations
+  obj <- NULL
+  
+  # Direct access first
+  if (!is.null(results[[obj_name]])) {
+    obj <- results[[obj_name]]
+  }
+  # Try in missing module
+  else if (!is.null(results$missing) && !is.null(results$missing[[obj_name]])) {
+    obj <- results$missing[[obj_name]]
+  }
+  # Try in competition module
+  else if (!is.null(results$competition) && !is.null(results$competition[[obj_name]])) {
+    obj <- results$competition[[obj_name]]
+  }
+  # Try in markets module
+  else if (!is.null(results$markets) && !is.null(results$markets[[obj_name]])) {
+    obj <- results$markets[[obj_name]]
+  }
+  # Try in prices module
+  else if (!is.null(results$prices) && !is.null(results$prices[[obj_name]])) {
+    obj <- results$prices[[obj_name]]
+  }
+  # Try in regional module
+  else if (!is.null(results$regional) && !is.null(results$regional[[obj_name]])) {
+    obj <- results$regional[[obj_name]]
+  }
+  # Try in interoperability module
+  else if (!is.null(results$interoperability) && !is.null(results$interoperability[[obj_name]])) {
+    obj <- results$interoperability[[obj_name]]
+  }
   
   # Section title
   cat("#### ", title, "\n\n", sep = "")
@@ -147,7 +520,7 @@ print_result_plot <- function(results,
     # If it's NULL -> no plot
     cat("*", missing_msg, "*\n\n", sep = "")
   } else {
-    # Something exists but is not a ggplot (e.g. data frame / model)
+    # Something exists but is not a ggplot
     cat("*Object exists but is not a plot (class: ", paste(class(obj), collapse = ", "),
         "). Nothing to draw here.*\n\n", sep = "")
   }
@@ -156,9 +529,10 @@ print_result_plot <- function(results,
 
 ```{r country-results-helper, include=FALSE}
 render_country_results <- function(cc, results_list) {
-  # grab the correct results object
+  # Grab the correct results object
   results <- results_list[[cc]]
-  summ    <- results$summary_stats
+  summ <- results$summary_stats
+  
   cat("#### Basic data summary for ", cc, "\n\n", sep = "")
   
   ## ------------------------------------------------------------
@@ -166,8 +540,7 @@ render_country_results <- function(cc, results_list) {
   ## ------------------------------------------------------------
   cat("**Contracts per year:**\n\n")
   if (!is.null(summ$n_obs_per_year)) {
-    contracts_tbl <- summ$n_obs_per_year %>%
-      as.data.frame()    # in case it's a tibble / data.table
+    contracts_tbl <- summ$n_obs_per_year %>% as.data.frame()
     knitr::kable(
       contracts_tbl,
       col.names = c("Tender year", "Number of contracts"),
@@ -200,8 +573,7 @@ render_country_results <- function(cc, results_list) {
   ## ------------------------------------------------------------
   if (!is.null(summ$tender_year_tenders)) {
     cat("**Number of unique tenders per year:**\n\n")
-    tenders_tbl <- summ$tender_year_tenders %>%
-      as.data.frame()
+    tenders_tbl <- summ$tender_year_tenders %>% as.data.frame()
     knitr::kable(
       tenders_tbl,
       col.names = c("Tender year", "Number of unique tenders"),
@@ -214,12 +586,11 @@ render_country_results <- function(cc, results_list) {
   ## Variables present
   ## ------------------------------------------------------------
   cat("**Variables present (excluding indicator variables):**\n\n")
-  # bullet list instead of one long line
   cat(paste0("- ", summ$vars_present, collapse = "\n"), "\n\n")
+  
   ## --------------------------------------------------------------------
-  ## 1. Patterns of underreporting (all "figs1" plots)
+  ## 1. Patterns of underreporting
   ## --------------------------------------------------------------------
-  # Question title and introductory text
   cat("#### <span style=\"color:red; font-weight:bold\">Are there observable patterns of underreporting information in the data?</span>\n\n")
   cat("The first step is to assess data completeness by examining missing values across all variables or a defined subset. ",
       "Given the limited number of variables in the ProAct dataset, a full review can be efficiently conducted to identify ",
@@ -227,8 +598,8 @@ render_country_results <- function(cc, results_list) {
 
   print_result_plot(
     results,
-    obj_name    = "missing_plot",
-    title       = paste("Overall Missing Values by Variable –", cc),
+    obj_name = "overall_plot",
+    title = paste("Overall Missing Values by Variable –", cc),
     description = paste(
       "This figure summarises the share of missing values for each key variable in the dataset.",
       "For every non-indicator column (all variables that do not start with 'ind_'), the pipeline computes the",
@@ -241,8 +612,8 @@ render_country_results <- function(cc, results_list) {
   
   print_result_plot(
     results,
-    obj_name    = "missing_by_buyer_plot",
-    title       = paste("Missingness by Buyer Type –", cc),
+    obj_name = "by_buyer_plot",
+    title = paste("Missingness by Buyer Type –", cc),
     description = paste(
       "This heatmap shows how missingness varies across buyer types and variables.",
       "Buyers are categorised into 'National', 'Regional', 'Utilities', 'EU agency', and 'Other Public Bodies'",
@@ -256,11 +627,11 @@ render_country_results <- function(cc, results_list) {
   
   print_result_plot(
     results,
-    obj_name    = "missing_buyers",
-    title       = paste("Missingness Among Top Buyers –", cc),
+    obj_name = "top_buyers_plot",
+    title = paste("Missingness Among Top Buyers –", cc),
     description = paste(
-      "This bar chart highlights the top 10 buyers with the highest overall share of missing data.",
-      "The underlying calculation groups the data by 'buyer_name' and 'buyer_buyertype',",
+      "This bar chart highlights the top buyers with the highest overall share of missing data.",
+      "The underlying calculation groups the data by 'buyer_masterid' and 'buyer_buyertype',",
       "keeps only buyers with at least 100 records, and then computes the average share of missing values",
       "across all non-indicator variables. Labels show truncated buyer names with buyer type on the next line.",
       "Use this figure to spot specific organisations that drive data quality problems:",
@@ -270,8 +641,8 @@ render_country_results <- function(cc, results_list) {
   
   print_result_plot(
     results,
-    obj_name    = "missing_by_proc_plot",
-    title       = paste("Missingness by Procedure Type –", cc),
+    obj_name = "by_procedure_plot",
+    title = paste("Missingness by Procedure Type –", cc),
     description = paste(
       "This heatmap displays the share of missing values for each variable, broken down by procurement procedure type.",
       "The pipeline recodes 'tender_proceduretype' into readable procedural categories",
@@ -285,8 +656,8 @@ render_country_results <- function(cc, results_list) {
   
   print_result_plot(
     results,
-    obj_name    = "year_miss",
-    title       = paste("Trends in Missing Shares Over Time –", cc),
+    obj_name = "by_year_plot",
+    title = paste("Trends in Missing Shares Over Time –", cc),
     description = paste(
       "This line plot tracks how missingness evolves over time for the 10 variables with the highest average missing share.",
       "For each 'tender_year', the pipeline computes missingness shares for all non-indicator variables,",
@@ -299,8 +670,8 @@ render_country_results <- function(cc, results_list) {
   
   print_result_plot(
     results,
-    obj_name    = "region_missing_map",
-    title       = paste("Missingness by Region (NUTS3) –", cc),
+    obj_name = "region_missing_map",
+    title = paste("Missingness by Region (NUTS3) –", cc),
     description = paste(
       "This choropleth map shows the overall share of missing values by NUTS3 region, where such information is available.",
       "The pipeline first cleans 'buyer_nuts' codes into valid NUTS3 identifiers,",
@@ -315,10 +686,11 @@ render_country_results <- function(cc, results_list) {
   ## --------------------------------------------------------------------
   ## 2. Interoperability potential 
   ## --------------------------------------------------------------------
-    cat("#### <span style=\"color:red; font-weight:bold\">Can this data be matched to other registers in the country to ensure higher quality monitoring?</span>\n\n")
-  cat("The ability to match public procurement data with other registers significantly enhances the analytical power of research and strengthens auditing capabilities. Most importantly, access to company register or beneficial ownership data provides valuable insights into the supplier side—such as how long the firm has been operating, its profitability, the ratio of contract value to revenue, and how closely the procurement sector aligns with the company’s main area of activity.
+  cat("#### <span style=\"color:red; font-weight:bold\">Can this data be matched to other registers in the country to ensure higher quality monitoring?</span>\n\n")
+  cat("The ability to match public procurement data with other registers significantly enhances the analytical power of research and strengthens auditing capabilities. Most importantly, access to company register or beneficial ownership data provides valuable insights into the supplier side—such as how long the firm has been operating, its profitability, the ratio of contract value to revenue, and how closely the procurement sector aligns with the company's main area of activity.
 
 In addition, linking buyers to relevant information about the government agency can greatly improve analysis on the buyer side, for instance by incorporating data on politically exposed persons or asset declarations. Finally, geospatial information can offer further insights into the location of the company or the procuring agency, enriching both analytical and oversight capacities.\n\n", sep = "")
+  
   ## --------------------------------------------------------------------
   ## 2a. Other data sources for matching (manual template)
   ## --------------------------------------------------------------------
@@ -326,10 +698,10 @@ In addition, linking buyers to relevant information about the government agency 
   cat("Requires manual filling\n\n")
 
   other_data_tbl <- tibble::tribble(
-    ~`Data type`,                    ~`Availability (access + format)`,              ~`ID type`,                                      ~Comments,
-    "Company register",              "Open / restricted / paid + file format",       "Tax ID / other national ID / BvD ID",          "Can be used as external validation source",
-    "Beneficial ownership data",     "Open / restricted / paid + file format",       "Tax ID / other national ID / BvD ID",          "Can share data per requested list of companies",
-    "Asset and interest declarations","Open / restricted / paid + file format",      "Name of politician / Personal Tax ID / other", "Often requires manual collection or scraping"
+    ~`Data type`, ~`Availability (access + format)`, ~`ID type`, ~Comments,
+    "Company register", "Open / restricted / paid + file format", "Tax ID / other national ID / BvD ID", "Can be used as external validation source",
+    "Beneficial ownership data", "Open / restricted / paid + file format", "Tax ID / other national ID / BvD ID", "Can share data per requested list of companies",
+    "Asset and interest declarations", "Open / restricted / paid + file format", "Name of politician / Personal Tax ID / other", "Often requires manual collection or scraping"
   )
 
   knitr::kable(
@@ -346,9 +718,9 @@ In addition, linking buyers to relevant information about the government agency 
   cat("Can be filled when respective data is available\n\n")
 
   matching_template <- tibble::tribble(
-    ~`Dataset A`,   ~`Dataset B`,      ~`Identifier`,        ~`Matching rate`,
-    "Procurement",  "Company register","Supplier ID + year", "0–100%",
-    "Company register","PEP data",     "Name",               "0–100%"
+    ~`Dataset A`, ~`Dataset B`, ~`Identifier`, ~`Matching rate`,
+    "Procurement", "Company register", "Supplier ID + year", "0–100%",
+    "Company register", "PEP data", "Name", "0–100%"
   )
 
   knitr::kable(
@@ -357,12 +729,17 @@ In addition, linking buyers to relevant information about the government agency 
   ) %>% print()
 
   cat("\n\n**Source:** Contract-level data; company register records; other micro data\n\n")
+  
   ## --------------------------------------------------------------------
-  ## 2c. Case-specific matching analysis (manual template)
+  ## 2c. Interoperability at organization level
   ## --------------------------------------------------------------------
   cat("#### Interoperability potential at organization level\n\n")
   
-  org_tbl <- results$org_interop_missing
+  # FIXED: Access from interoperability module
+  org_tbl <- NULL
+  if (!is.null(results$interoperability) && !is.null(results$interoperability$org_missing)) {
+    org_tbl <- results$interoperability$org_missing
+  }
   
   if (!is.null(org_tbl)) {
     org_tbl_print <- org_tbl %>%
@@ -375,15 +752,14 @@ In addition, linking buyers to relevant information about the government agency 
       ) %>%
       dplyr::select(
         `Organization type` = organization_type,
-        `ID type`           = id_type,
+        `ID type` = id_type,
         `Missing share`
       )
     
     knitr::kable(
       org_tbl_print,
       align = c("l", "l", "c")
-    ) %>%
-      print()
+    ) %>% print()
     
     cat("\n\n")
   } else {
@@ -391,16 +767,15 @@ In addition, linking buyers to relevant information about the government agency 
   }
   
   ## --------------------------------------------------------------------
-  ## 3. Network / risky profile analysis (figs2)
+  ## 3. Network / risky profile analysis
   ## --------------------------------------------------------------------
-  
   cat("#### <span style=\"color:red; font-weight:bold\">Do companies winning contracts have risky profiles?</span>\n\n")
   cat("This analysis seeks to identify potentially suspicious patterns in company behavior, including movements between markets or registration in tax haven jurisdictions. With access to company and beneficial ownership register data, additional and more sophisticated indicators could be developed.\n\n", sep = "")
   
   print_result_plot(
     results,
-    obj_name    = "market_network_plot",
-    title       = paste("Network of Unusual Supplier Market Entries –", cc),
+    obj_name = "network_plot",
+    title = paste("Network of Unusual Supplier Market Entries –", cc),
     description = paste(
       "This network visualisation maps atypical movements of suppliers across CPV product clusters.",
       "Each node represents a 3-digit CPV cluster, i.e. a broad product or service market derived from 'lot_productcode'.",
@@ -420,8 +795,8 @@ In addition, linking buyers to relevant information about the government agency 
   
   print_result_plot(
     results,
-    obj_name    = "supplier_unusual_plot",
-    title       = paste("Suppliers with Unusually Diversified Market Entries –", cc),
+    obj_name = "supplier_unusual_plot",
+    title = paste("Suppliers with Unusually Diversified Market Entries –", cc),
     description = paste(
       "Each bar represents a supplier flagged as behaving unusually across CPV clusters.",
       "For every bidder, the pipeline looks at all atypical CPV entries (those with high surprise z-scores) and records:",
@@ -434,8 +809,8 @@ In addition, linking buyers to relevant information about the government agency 
   
   print_result_plot(
     results,
-    obj_name    = "market_unusual_plot",
-    title       = paste("Markets Attracting Unusual Supplier Entries –", cc),
+    obj_name = "market_unusual_plot",
+    title = paste("Markets Attracting Unusual Supplier Entries –", cc),
     description = paste(
       "Each point represents a 3-digit CPV cluster (a broad product or service market).",
       "For each target cluster, the pipeline aggregates all atypical entries into that market and computes:",
@@ -449,17 +824,15 @@ In addition, linking buyers to relevant information about the government agency 
   )
   
   ## --------------------------------------------------------------------
-  ## 4. Buyer–supplier concentration (figs3)
+  ## 4. Buyer–supplier concentration
   ## --------------------------------------------------------------------
-  
   cat("#### <span style=\"color:red; font-weight:bold\">Are there suspicious connections between buyers and suppliers?</span>\n\n")
   cat("This analysis examines the potential existence of suspicious connections between buyers and suppliers. It can greatly benefit from access to additional registers—such as politically exposed persons (PEP) lists, interest or asset declaration databases, and beneficial ownership (BO) registers—as these can reveal direct links between suppliers and buyers. \n\n", sep = "")
   
-  
   print_result_plot(
     results,
-    obj_name    = "bc_yearly",
-    title       = paste("Top Buyers by Supplier Concentration Over Time –", cc),
+    obj_name = "concentration_yearly_plot",
+    title = paste("Top Buyers by Supplier Concentration Over Time –", cc),
     description = paste(
       "This faceted bar chart shows, for each year, the buyers with the highest concentration of spending on a single supplier.",
       "The pipeline groups contracts by 'tender_year', 'buyer_masterid', and 'bidder_masterid',",
@@ -475,16 +848,15 @@ In addition, linking buyers to relevant information about the government agency 
   )
   
   ## --------------------------------------------------------------------
-  ## 5. Transparency / integrity and outcomes (figs4)
+  ## 5. Transparency / integrity and outcomes
   ## --------------------------------------------------------------------
-  
-    cat("#### <span style=\"color:red; font-weight:bold\">Is there an observable effect of transparency and integrity issues on prices and competition?</span>\n\n")
+  cat("#### <span style=\"color:red; font-weight:bold\">Is there an observable effect of transparency and integrity issues on prices and competition?</span>\n\n")
   cat("While this analysis does not establish any causal relationships, it can be used to explore correlations between transparency-related measures, prices, and competitiveness. \n\n", sep = "")
   
   print_result_plot(
     results,
-    obj_name    = "singleb_plot",
-    title       = paste("Predicted Single-Bidding by Missing Share –", cc),
+    obj_name = "singleb_plot",
+    title = paste("Predicted Single-Bidding by Missing Share –", cc),
     description = paste(
       "This figure summarises the estimated relationship between data missingness and the prevalence of single-bid tenders.",
       "At the buyer–year level (for years after 2014), the pipeline computes:",
@@ -497,11 +869,28 @@ In addition, linking buyers to relevant information about the government agency 
       "while paying attention to the uncertainty band and the range of missingness actually observed in the data."
     )
   )
-  
-  print_result_plot(
+
+  # Sensitivity analysis for single-bidding
+  print_sensitivity_bundle_compact(
     results,
-    obj_name    = "rel_price_plot",
-    title       = paste("Predicted Relative Price by Missing Share –", cc),
+    bundle_name = "singleb_sensitivity",
+    title = paste("Sensitivity Analysis: Single-Bidding Model –", cc),
+    description = paste(
+      "This table summarizes the robustness of the single-bidding analysis across different model specifications.",
+      "The pipeline runs multiple versions of the fractional logit model with varying combinations of:",
+      "fixed effects (year FE, buyer type FE, or both), clustering (by buyer, buyer type, or none),",
+      "and control variables (contract count, average value, or both).",
+      "Each row shows results for one specification, including the coefficient estimate, standard error, p-value,",
+      "and significance stars. Use this table to verify that the core finding about missingness and single-bidding",
+      "holds across reasonable modeling choices and is not driven by a single specification."
+    ),
+    collapse_html = TRUE
+  )
+
+    print_result_plot(
+    results,
+    obj_name = "rel_price_plot",  
+    title = paste("Predicted Relative Price by Missing Share –", cc),
     description = paste(
       "This figure shows how relative prices correlate with overall missingness after controlling for key factors.",
       "For contracts with valid price information (bid price and estimated lot value),",
@@ -514,6 +903,25 @@ In addition, linking buyers to relevant information about the government agency 
       "may be associated with higher prices relative to estimates; a flat line would indicate no clear price effect."
     )
   )
+
+
+  # Sensitivity analysis for relative price
+  print_sensitivity_bundle_compact(
+    results,
+    bundle_name = "relprice_sensitivity",
+    title = paste("Sensitivity Analysis: Relative Price Model –", cc),
+    description = paste(
+      "This table summarizes the robustness of the relative price analysis across different model specifications.",
+      "The pipeline runs multiple versions of the linear fixed-effects model with varying combinations of:",
+      "fixed effects (year FE, procedure type FE, buyer type FE, or combinations),",
+      "clustering (by buyer, buyer type, or none), and control variables.",
+      "Each row shows results for one specification, including the coefficient estimate, standard error, p-value,",
+      "and significance stars. Use this table to assess whether the relationship between missingness and relative prices",
+      "is consistent across different modeling assumptions or sensitive to specific controls and fixed effects."
+    ),
+    collapse_html = TRUE
+  )
+
 }
 ```
 
@@ -524,14 +932,14 @@ In addition, linking buyers to relevant information about the government agency 
 render_country_results("BG", results_list)
 ```
 
-### Uruguat (UY)
-
+### Uruguay (UY)
 ```{r country-UY, echo=FALSE, results='asis'}
 render_country_results("UY", results_list)
 ```
 
+## {-}
 ```{r show-utils, echo=FALSE, results='asis'}
-utils_path <- "C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/integrity_utils.R"
+utils_path <- "C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/src/utils/integrity_utils.R"
 utils_code <- readLines(utils_path, warn = FALSE)
 cat('<details><summary><b>Show underlying code</b></summary>\n')
 cat('\n```r\n')
