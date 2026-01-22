@@ -1,0 +1,23 @@
+---
+title: "data_process"
+author: "Viktoriia Poltoratskaia"
+date: "2025-12-24"
+output: html_document
+---
+
+## Data processing approaches and templates
+
+| Source | Comments |
+|---|---|
+| GTI’s [Public Procurement Data processing](https://www.govtransparency.eu/wp-content/uploads/2025/06/PP_data_processing_20250613.pdf) | Very comprehensive guideline on scraping, matching, processing and cleaning pipeline for public procurement data; pipeline for indicators calculation is not included. |
+| [DIGIWHIST](https://drive.google.com/file/d/1fb7CgXJ2dqpbYujZRF8RU0gEBHwOojGM/view) | Template of variables for analysis (especially for integrity indicators), updated version is [here](https://www.govtransparency.eu/wp-content/uploads/2024/04/Fazekas-et-al_Global-PP-data_published_2024.pdf). |
+| ProAct [methodology report](https://www.procurementintegrity.org/assets/about/ProACT_methods_paper_20220809_final.pdf) | Logic of data processing, applicable to ProAct countries particularly. |
+| Open Contracting [DS](https://standard.open-contracting.org/latest/en/guidance/) [1](https://docs.google.com/document/d/1VAKw8QCU08__qUnssmbSl_N38Rpd7nhcNChZ80qHOCI/edit?tab=t.0#heading=h.vbacqfss5h4z), [2](https://docs.google.com/document/d/1LiF3KYoIuV5jdum5xPd6EG2udMs2XkOnYlOpJArVOGs/edit?tab=t.0) | Works well for data publication, not very convenient for analysis. For analysis we need flattened csv tables with unified units of observation (e.g. lot) and selected sets of variables with thorough filtering, which OCDS does not do. |
+
+
+## WB PP reproducibility packages
+
+| Country | Link | Notes |
+|---|---|---|
+| CN | <https://reproducibility.worldbank.org/index.php/catalog/268#:~:text=Public%20procurement%20data%3A%20Auction%20results,with%20auction%20variables> | --- |
+| BR | <https://reproducibility.worldbank.org/index.php/catalog/72#:~:text=MiDES%3A%20dissagregated%20and%20harmonized%20dataset,budget%20execution%20by%20Brazilian%20municipalities> | --- |

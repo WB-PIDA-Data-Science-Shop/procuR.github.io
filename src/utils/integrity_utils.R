@@ -193,6 +193,7 @@ procedure_type_labels <- c(
 
 #' Standard text sizes for all plots
 #' These are calibrated for fig.width=14, fig.height=12
+# In PLOT_SIZES (at the top of the file):
 PLOT_SIZES <- list(
   base_size = 16,
   title_size = 20,
@@ -201,10 +202,10 @@ PLOT_SIZES <- list(
   axis_text_size = 14,
   legend_title_size = 14,
   legend_text_size = 13,
-  geom_text_size = 4,      # For geom_text (percentages in tiles, bar labels)
-  geom_text_large = 5,     # For larger labels
+  geom_text_size = 4.5,      
+  geom_text_large = 5,
   line_size = 1.5,
-  point_size = 3
+  point_size = 4
 )
 
 #' Apply standard theme to a ggplot object
@@ -430,7 +431,7 @@ summarise_missing_shares <- function(df, cols = !dplyr::starts_with("ind_")) {
   df %>%
     dplyr::summarise(
       dplyr::across(
-        .cols = {{ cols }} & !ends_with("_missing_share"),  # Remove dplyr:: prefix from ends_with
+        .cols = c({{ cols }}) & !dplyr::ends_with("_missing_share"),
         .fns = ~ mean(is.na(.)),
         .names = "{.col}_missing_share"
       ),
@@ -576,11 +577,11 @@ plot_missing_heatmap <- function(data, x_var, y_var, fill_var,
   if (is.null(text_size)) {
     n_y_values <- length(unique(data[[y_var]]))
     if (n_y_values > 40) {
-      text_size <- PLOT_SIZES$geom_text_size - 0.5
+      text_size <- PLOT_SIZES$geom_text_size - 0.3  # Still readable for many rows
     } else if (n_y_values > 30) {
-      text_size <- PLOT_SIZES$geom_text_size - 0.2
-    } else {
       text_size <- PLOT_SIZES$geom_text_size
+    } else {
+      text_size <- PLOT_SIZES$geom_text_size + 0.3  # Even bigger for fewer rows
     }
   }
   
@@ -596,7 +597,8 @@ plot_missing_heatmap <- function(data, x_var, y_var, fill_var,
     ggplot2::geom_text(
       ggplot2::aes(label = scales::percent(!!fill_sym, accuracy = 1)),
       size = text_size,
-      color = "black"
+      color = "black",
+      fontface = "bold"  # ADDED: Makes percentages stand out more
     ) +
     ggplot2::scale_fill_gradient(
       name = "Missing share",
@@ -2617,7 +2619,7 @@ analyze_regional <- function(df, config, output_dir) {
       ggplot2::labs(
         title = paste("Overall share of missing values by region (NUTS3) –", config$country)
       ) +
-      ggplot2::theme_minimal()
+      standard_plot_theme()  # CHANGED from theme_minimal()
     
     save_plot(results$region_missing_map, "region_missing_map")
   }
@@ -2779,6 +2781,7 @@ run_integrity_pipeline <- function(df, country_code = "GEN", output_dir) {
   # Run analysis modules
   results <- list(
     config = config,
+    data = df,
     data_quality = data_quality,
     summary_stats = summary_stats,
     missing = safely_run_module(analyze_missing_values, df, config, output_dir),

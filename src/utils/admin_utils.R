@@ -95,6 +95,391 @@ add_buyer_group <- function(buyer_buyertype) {
   )
 }
 
+# ========================================================================
+# SPECIFICATION TESTING AND SENSITIVITY ANALYSIS FUNCTIONS
+# ========================================================================
+
+#' Build fixed effects formula part
+make_fe_part <- function(fe) {
+  switch(
+    fe,
+    "0" = "0",
+    "buyer" = "buyer_id",
+    "year" = "tender_year",
+    "buyer+year" = "buyer_id + tender_year",
+    "buyer#year" = "buyer_id^tender_year",
+    stop("Unknown FE spec: ", fe)
+  )
+}
+
+#' Build cluster formula
+make_cluster <- function(cluster) {
+  switch(
+    cluster,
+    "none" = NULL,
+    "buyer" = stats::as.formula("~ buyer_id"),
+    "year" = stats::as.formula("~ tender_year"),
+    "buyer_year" = stats::as.formula("~ buyer_id + tender_year"),
+    "buyer_buyertype" = stats::as.formula("~ buyer_id + buyer_buyertype"),
+    stop("Unknown cluster spec: ", cluster)
+  )
+}
+
+#' Safe fixest model fitting
+safe_fixest <- function(expr) {
+  tryCatch(expr, error = function(e) NULL)
+}
+
+#' Extract effect from fixest model
+extract_effect_fixest <- function(model, x_name, data_used, y_name = NULL) {
+  s <- summary(model)
+  ct <- s$coeftable
+  
+  if (!(x_name %in% rownames(ct))) {
+    return(list(
+      estimate = NA_real_,
+      pvalue = NA_real_,
+      nobs = s$nobs,
+      std_slope = NA_real_
+    ))
+  }
+  
+  est <- as.numeric(ct[x_name, "Estimate"])
+  pv <- as.numeric(ct[x_name, "Pr(>|t|)"])
+  if (is.na(pv) && "Pr(>|z|)" %in% colnames(ct)) {
+    pv <- as.numeric(ct[x_name, "Pr(>|z|)"])
+  }
+  
+  sx <- stats::sd(data_used[[x_name]], na.rm = TRUE)
+  std_slope <- est * sx
+  
+  list(
+    estimate = est,
+    pvalue = pv,
+    nobs = s$nobs,
+    std_slope = std_slope
+  )
+}
+
+#' Compute effect at P10 vs P90
+effect_p10_p90 <- function(model, data_used, x_name) {
+  qs <- stats::quantile(data_used[[x_name]], probs = c(.1, .9), na.rm = TRUE)
+  x_lo <- unname(qs[1])
+  x_hi <- unname(qs[2])
+  
+  typical <- data_used[1, , drop = FALSE]
+  for (nm in names(typical)) {
+    if (nm == x_name) next
+    v <- data_used[[nm]]
+    if (is.numeric(v)) {
+      typical[[nm]] <- stats::median(v, na.rm = TRUE)
+    } else if (is.factor(v) || is.character(v)) {
+      tab <- sort(table(v), decreasing = TRUE)
+      typical[[nm]] <- names(tab)[1]
+      if (is.factor(v)) typical[[nm]] <- factor(typical[[nm]], levels = levels(v))
+    }
+  }
+  
+  d_lo <- typical
+  d_hi <- typical
+  d_lo[[x_name]] <- x_lo
+  d_hi[[x_name]] <- x_hi
+  
+  p_lo <- suppressWarnings(stats::predict(model, newdata = d_lo, type = "response"))
+  p_hi <- suppressWarnings(stats::predict(model, newdata = d_hi, type = "response"))
+  
+  as.numeric(p_hi - p_lo)
+}
+
+# Sensitivity analysis functions
+add_strength_column <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(specs)
+  
+  if ("effect_strength" %in% names(specs)) {
+    specs$strength <- specs$effect_strength
+  } else if ("std_slope" %in% names(specs)) {
+    specs$strength <- specs$std_slope
+  } else {
+    specs$strength <- NA_real_
+  }
+  specs
+}
+
+summarise_sensitivity_overall <- function(specs, p_levels = c(0.05, 0.10, 0.20)) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs <- add_strength_column(specs)
+  
+  tibble::tibble(
+    n_specs = nrow(specs),
+    share_positive = mean(specs$estimate > 0, na.rm = TRUE),
+    share_negative = mean(specs$estimate < 0, na.rm = TRUE),
+    median_estimate = median(specs$estimate, na.rm = TRUE),
+    median_pvalue = median(specs$pvalue, na.rm = TRUE),
+    median_strength = median(specs$strength, na.rm = TRUE),
+    !!!setNames(
+      lapply(p_levels, function(p) mean(specs$pvalue <= p, na.rm = TRUE)),
+      paste0("share_p_le_", p_levels)
+    )
+  )
+}
+
+summarise_sign_instability <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  s <- sign(specs$estimate)
+  s <- s[!is.na(s) & s != 0]
+  tibble::tibble(
+    share_sign_stable = if (length(s) == 0) NA_real_ else as.numeric(length(unique(s)) <= 1),
+    n_nonzero = length(s)
+  )
+}
+
+summarise_by_fe <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs <- add_strength_column(specs)
+  
+  specs %>%
+    dplyr::group_by(fe) %>%
+    dplyr::summarise(
+      n_specs = dplyr::n(),
+      share_positive = mean(estimate > 0, na.rm = TRUE),
+      share_p10 = mean(pvalue <= 0.10, na.rm = TRUE),
+      median_p = median(pvalue, na.rm = TRUE),
+      median_strength = median(strength, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(dplyr::desc(share_p10))
+}
+
+summarise_by_cluster <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs <- add_strength_column(specs)
+  
+  specs %>%
+    dplyr::group_by(cluster) %>%
+    dplyr::summarise(
+      n_specs = dplyr::n(),
+      share_positive = mean(estimate > 0, na.rm = TRUE),
+      share_p10 = mean(pvalue <= 0.10, na.rm = TRUE),
+      median_p = median(pvalue, na.rm = TRUE),
+      median_strength = median(strength, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(median_p)
+}
+
+summarise_by_controls <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs <- add_strength_column(specs)
+  
+  specs %>%
+    dplyr::group_by(controls) %>%
+    dplyr::summarise(
+      n_specs = dplyr::n(),
+      share_positive = mean(estimate > 0, na.rm = TRUE),
+      share_p10 = mean(pvalue <= 0.10, na.rm = TRUE),
+      median_p = median(pvalue, na.rm = TRUE),
+      median_strength = median(strength, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(dplyr::desc(share_p10))
+}
+
+classify_specs <- function(specs, p_cut = 0.10) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs %>%
+    dplyr::mutate(
+      class = dplyr::case_when(
+        estimate > 0 & pvalue <= p_cut ~ "Positive & significant",
+        estimate > 0 ~ "Positive but insignificant",
+        estimate < 0 & pvalue <= p_cut ~ "Negative & significant",
+        estimate < 0 ~ "Negative but insignificant",
+        TRUE ~ "Missing/NA"
+      )
+    ) %>%
+    dplyr::count(class) %>%
+    dplyr::mutate(share = n / sum(n))
+}
+
+top_cells <- function(specs, p_cut = 0.10, n_top = 10) {
+  if (is.null(specs) || nrow(specs) == 0L) return(tibble::tibble())
+  specs %>%
+    dplyr::mutate(p_ok = pvalue <= p_cut) %>%
+    dplyr::group_by(fe, cluster, controls) %>%
+    dplyr::summarise(
+      n = dplyr::n(),
+      share_pok = mean(p_ok, na.rm = TRUE),
+      median_p = median(pvalue, na.rm = TRUE),
+      median_est = median(estimate, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(dplyr::desc(share_pok), median_p) %>%
+    dplyr::slice_head(n = n_top)
+}
+
+build_sensitivity_bundle <- function(specs) {
+  if (is.null(specs) || nrow(specs) == 0L) return(list())
+  specs <- add_strength_column(specs)
+  
+  list(
+    overall = summarise_sensitivity_overall(specs),
+    sign = summarise_sign_instability(specs),
+    by_fe = summarise_by_fe(specs),
+    by_cluster = summarise_by_cluster(specs),
+    by_controls = summarise_by_controls(specs),
+    classes = classify_specs(specs),
+    top_cells = top_cells(specs)
+  )
+}
+
+pick_best_model <- function(results_df,
+                            require_positive = TRUE,
+                            p_max = 0.10,
+                            strength_col = c("effect_strength", "std_slope")) {
+  strength_col <- match.arg(strength_col)
+  
+  df <- results_df
+  if (require_positive) df <- df[df$estimate > 0, , drop = FALSE]
+  df <- df[!is.na(df$pvalue) & df$pvalue <= p_max, , drop = FALSE]
+  df <- df[!is.na(df[[strength_col]]), , drop = FALSE]
+  if (nrow(df) == 0) return(NULL)
+  
+  df <- df[order(df[[strength_col]], decreasing = TRUE), , drop = FALSE]
+  df[["rank"]] <- seq_len(nrow(df))
+  df[1, , drop = FALSE]
+}
+
+run_short_subm_specs <- function(reg_data, 
+                                 fe_set = c("0", "buyer", "year", "buyer+year"),
+                                 cluster_set = c("none", "buyer", "year", "buyer_year", "buyer_buyertype"),
+                                 controls_set = c("x_only", "base")) {
+  out <- list()
+  k <- 0L
+  
+  for (fe in fe_set) {
+    fe_part <- make_fe_part(fe)
+    
+    for (cl in cluster_set) {
+      cl_fml <- make_cluster(cl)
+      
+      for (ctrl in controls_set) {
+        rhs_terms <- switch(
+          ctrl,
+          "x_only" = c("short_submission_period"),
+          "base" = c("short_submission_period", "buyer_buyertype", "tender_proceduretype")
+        )
+        
+        rhs_terms <- rhs_terms[rhs_terms %in% names(reg_data)]
+        rhs <- paste(rhs_terms, collapse = " + ")
+        fml <- stats::as.formula(paste0("ind_corr_binary ~ ", rhs, " | ", fe_part))
+        
+        m <- safe_fixest(
+          fixest::feglm(
+            fml,
+            family = quasibinomial(link = "logit"),
+            data = reg_data,
+            cluster = cl_fml
+          )
+        )
+        
+        if (is.null(m)) next
+        
+        eff <- extract_effect_fixest(
+          model = m,
+          x_name = "short_submission_period",
+          data_used = reg_data
+        )
+        
+        eff_strength <- safe_fixest(effect_p10_p90(m, reg_data, "short_submission_period"))
+        if (is.null(eff_strength)) eff_strength <- NA_real_
+        
+        k <- k + 1L
+        out[[k]] <- data.frame(
+          outcome = "short_subm",
+          model_type = "fractional_logit",
+          fe = fe,
+          cluster = cl,
+          controls = ctrl,
+          estimate = eff$estimate,
+          pvalue = eff$pvalue,
+          nobs = eff$nobs,
+          std_slope = eff$std_slope,
+          effect_strength = eff_strength,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  
+  if (length(out) == 0) return(data.frame())
+  do.call(rbind, out)
+}
+
+run_long_dec_specs <- function(reg_data,
+                               fe_set = c("0", "buyer", "year", "buyer+year"),
+                               cluster_set = c("none", "buyer", "year", "buyer_year", "buyer_buyertype"),
+                               controls_set = c("x_only", "base")) {
+  out <- list()
+  k <- 0L
+  
+  for (fe in fe_set) {
+    fe_part <- make_fe_part(fe)
+    
+    for (cl in cluster_set) {
+      cl_fml <- make_cluster(cl)
+      
+      for (ctrl in controls_set) {
+        rhs_terms <- switch(
+          ctrl,
+          "x_only" = c("long_decision_period"),
+          "base" = c("long_decision_period", "buyer_buyertype", "tender_proceduretype")
+        )
+        
+        rhs_terms <- rhs_terms[rhs_terms %in% names(reg_data)]
+        rhs <- paste(rhs_terms, collapse = " + ")
+        fml <- stats::as.formula(paste0("ind_corr_binary ~ ", rhs, " | ", fe_part))
+        
+        m <- safe_fixest(
+          fixest::feglm(
+            fml,
+            family = quasibinomial(link = "logit"),
+            data = reg_data,
+            cluster = cl_fml
+          )
+        )
+        
+        if (is.null(m)) next
+        
+        eff <- extract_effect_fixest(
+          model = m,
+          x_name = "long_decision_period",
+          data_used = reg_data
+        )
+        
+        eff_strength <- safe_fixest(effect_p10_p90(m, reg_data, "long_decision_period"))
+        if (is.null(eff_strength)) eff_strength <- NA_real_
+        
+        k <- k + 1L
+        out[[k]] <- data.frame(
+          outcome = "long_dec",
+          model_type = "fractional_logit",
+          fe = fe,
+          cluster = cl,
+          controls = ctrl,
+          estimate = eff$estimate,
+          pvalue = eff$pvalue,
+          nobs = eff$nobs,
+          std_slope = eff$std_slope,
+          effect_strength = eff_strength,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  
+  if (length(out) == 0) return(data.frame())
+  do.call(rbind, out)
+}
+
 # ------------------------------------------------------------------------
 # 4. Generic "days between" helper
 # ------------------------------------------------------------------------
@@ -905,12 +1290,27 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
   )
   
   # ----------------------------------------------------------------------
-  # E) Days between submission deadline and award date
+  # E) Days between submission deadline and award/signature date
+  # (uses contract signature if available, otherwise award decision)
   # ----------------------------------------------------------------------
+  # Check if tender_contractsignaturedate exists, if not create it as NA
+  if (!"tender_contractsignaturedate" %in% names(df)) {
+    df <- df %>%
+      dplyr::mutate(tender_contractsignaturedate = as.Date(NA))
+  }
+  
+  df_with_end_date <- df %>%
+    dplyr::mutate(
+      decision_end_date = dplyr::coalesce(
+        as.Date(tender_contractsignaturedate),
+        as.Date(tender_awarddecisiondate)
+      )
+    )
+  
   tender_periods_dec <- compute_tender_days(
-    df,
+    df_with_end_date,
     tender_biddeadline,
-    tender_awarddecisiondate,
+    decision_end_date,
     tender_days_dec
   )
   
@@ -1128,7 +1528,7 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
       legend.position = "top"
     )
   
-
+  
   
   # 2) by value of contracts
   long_share_value_buyer_proc <- tender_periods_labeled_dec %>%
@@ -1199,8 +1599,12 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
   )
   
   # ----------------------------------------------------------------------
-  # I) Effect of shortened period on single bidding (regression)
+  # I) Effect of shortened period on single bidding (regression WITH SPECIFICATION TESTING)
   # ----------------------------------------------------------------------
+  message("\n", strrep("-", 60))
+  message("Running specification testing for SHORT submission period...")
+  message(strrep("-", 60))
+  
   reg_short_base <- df %>%
     dplyr::mutate(
       tender_publications_firstcallfortenderdate =
@@ -1265,64 +1669,114 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
       ind_corr_binary = ind_corr_singleb / 100
     )
   
+  # Run specification testing
+  specs_short <- NULL
+  sensitivity_short <- NULL
+  model_short_glm <- NULL
+  plot_short_reg <- NULL
+  
   if (nrow(reg_short) > 0) {
-    model_short_glm <- stats::glm(
-      ind_corr_binary ~ short_submission_period +
-        buyer_buyertype + tender_proceduretype +
-        as.factor(tender_year),
-      data   = reg_short,
-      family = stats::binomial(link = "logit")
+    # Run all specifications
+    specs_short <- run_short_subm_specs(
+      reg_data = reg_short,
+      fe_set = c("0", "buyer", "year", "buyer+year"),
+      cluster_set = c("none", "buyer", "year", "buyer_year", "buyer_buyertype"),
+      controls_set = c("x_only", "base")
     )
     
-    cov_cluster_short <- sandwich::vcovCL(
-      model_short_glm,
-      cluster = reg_short$buyer_id
-    )
-    lmtest::coeftest(model_short_glm, vcov = cov_cluster_short)
-    
-    pred_short <- ggeffects::ggpredict(
-      model_short_glm,
-      terms    = "short_submission_period",
-      vcov_fun = "vcovCL",
-      vcov_args = list(cluster = reg_short$buyer_id)
-    )
-    
-    # caption: N and years covered
-    n_short <- nrow(reg_short)
-    min_y_s <- min(reg_short$tender_year, na.rm = TRUE)
-    max_y_s <- max(reg_short$tender_year, na.rm = TRUE)
-    caption_short <- paste0(
-      "Sample: N = ", n_short,
-      " tenders; years covered: ", min_y_s, "–", max_y_s
-    )
-    
-    plot_short_reg <- ggplot2::ggplot(
-      pred_short,
-      ggplot2::aes(x = x, y = predicted)
-    ) +
-      ggplot2::geom_line(size = 1.5, color = "lightblue") +
-      ggplot2::geom_ribbon(
-        ggplot2::aes(ymin = conf.low, ymax = conf.high),
-        alpha = 0.2
-      ) +
-      ggplot2::labs(
-        title    = "Predicted probability of single bidding\nby short submission period",
-        subtitle = "Controls: buyer type, tender year; cluster-robust SEs by buyer",
-        x        = "Short submission period (0 = normal, 1 = short)",
-        y        = "Predicted probability",
-        caption  = caption_short
-      ) +
-      ggplot2::scale_y_continuous(labels = scales::percent_format()) +
-      ggplot2::theme_minimal(base_size = 20)
+    # Build sensitivity bundle
+    if (!is.null(specs_short) && nrow(specs_short) > 0) {
+      sensitivity_short <- build_sensitivity_bundle(specs_short)
+      
+      # Print sensitivity
+      message("\n--- SHORT SUBMISSION PERIOD Sensitivity (", country_code, ") ---")
+      print(sensitivity_short$overall)
+      print(sensitivity_short$sign)
+      print(sensitivity_short$by_fe)
+      print(sensitivity_short$by_cluster)
+      print(sensitivity_short$by_controls)
+      print(sensitivity_short$classes)
+      print(sensitivity_short$top_cells)
+      
+      # Pick best model
+      best_row_short <- pick_best_model(
+        specs_short,
+        require_positive = TRUE,
+        p_max = 0.10,
+        strength_col = "effect_strength"
+      )
+      
+      if (!is.null(best_row_short)) {
+        # Refit best model
+        fe_part <- make_fe_part(best_row_short$fe)
+        cl_fml <- make_cluster(best_row_short$cluster)
+        
+        rhs_terms <- switch(
+          best_row_short$controls,
+          "x_only" = c("short_submission_period"),
+          "base" = c("short_submission_period", "buyer_buyertype", "tender_proceduretype")
+        )
+        rhs_terms <- rhs_terms[rhs_terms %in% names(reg_short)]
+        rhs <- paste(rhs_terms, collapse = " + ")
+        fml <- stats::as.formula(paste0("ind_corr_binary ~ ", rhs, " | ", fe_part))
+        
+        model_short_glm <- fixest::feglm(
+          fml,
+          family = quasibinomial(link = "logit"),
+          data = reg_short,
+          cluster = cl_fml
+        )
+        
+        pred_short <- tryCatch(
+          ggeffects::ggpredict(model_short_glm, terms = "short_submission_period"),
+          error = function(e) NULL
+        )
+        
+        if (!is.null(pred_short)) {
+          n_short <- nrow(reg_short)
+          min_y_s <- min(reg_short$tender_year, na.rm = TRUE)
+          max_y_s <- max(reg_short$tender_year, na.rm = TRUE)
+          caption_short <- paste0(
+            "Sample: N = ", n_short,
+            " tenders; years covered: ", min_y_s, "–", max_y_s,
+            ". BEST model: FE=", best_row_short$fe,
+            ", Cluster=", best_row_short$cluster,
+            ", Controls=", best_row_short$controls
+          )
+          
+          plot_short_reg <- ggplot2::ggplot(
+            pred_short,
+            ggplot2::aes(x = x, y = predicted)
+          ) +
+            ggplot2::geom_line(size = 1.5, color = "lightblue") +
+            ggplot2::geom_ribbon(
+              ggplot2::aes(ymin = conf.low, ymax = conf.high),
+              alpha = 0.2
+            ) +
+            ggplot2::labs(
+              title    = "Predicted probability of single bidding\nby short submission period",
+              subtitle = "(BEST Model Selected from Specification Testing)",
+              x        = "Short submission period (0 = normal, 1 = short)",
+              y        = "Predicted probability",
+              caption  = caption_short
+            ) +
+            ggplot2::scale_y_continuous(labels = scales::percent_format()) +
+            ggplot2::theme_minimal(base_size = 20)
+        }
+      }
+    }
   } else {
-    model_short_glm <- NULL
-    plot_short_reg  <- NULL
+    message("No valid data for short submission period regression")
   }
   
   
   # ----------------------------------------------------------------------
-  # J) Effect of long period on single bidding (regression)
+  # J) Effect of long period on single bidding (regression WITH SPECIFICATION TESTING)
   # ----------------------------------------------------------------------
+  message("\n", strrep("-", 60))
+  message("Running specification testing for LONG decision period...")
+  message(strrep("-", 60))
+  
   reg_long_base <- df %>%
     dplyr::mutate(
       tender_publications_firstcallfortenderdate =
@@ -1367,60 +1821,106 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
       ind_corr_binary = ind_corr_singleb / 100
     )
   
+  # Run specification testing
+  specs_long <- NULL
+  sensitivity_long <- NULL
+  model_long_glm <- NULL
+  plot_long_reg <- NULL
+  
   if (nrow(reg_long) > 0) {
-    model_long_glm <- stats::glm(
-      ind_corr_binary ~ long_decision_period +
-        buyer_buyertype + tender_proceduretype +
-        as.factor(tender_year),
-      data   = reg_long,
-      family = stats::binomial(link = "logit")
+    # Run all specifications
+    specs_long <- run_long_dec_specs(
+      reg_data = reg_long,
+      fe_set = c("0", "buyer", "year", "buyer+year"),
+      cluster_set = c("none", "buyer", "year", "buyer_year", "buyer_buyertype"),
+      controls_set = c("x_only", "base")
     )
     
-    cov_cluster_long <- sandwich::vcovCL(
-      model_long_glm,
-      cluster = reg_long$buyer_id
-    )
-    lmtest::coeftest(model_long_glm, vcov = cov_cluster_long)
-    
-    pred_long <- ggeffects::ggpredict(
-      model_long_glm,
-      terms    = "long_decision_period",
-      vcov_fun = "vcovCL",
-      vcov_args = list(cluster = reg_long$buyer_id)
-    )
-    
-    # caption: N and years covered
-    n_long  <- nrow(reg_long)
-    min_y_l <- min(reg_long$tender_year, na.rm = TRUE)
-    max_y_l <- max(reg_long$tender_year, na.rm = TRUE)
-    caption_long <- paste0(
-      "Sample: N = ", n_long,
-      " tenders; years covered: ", min_y_l, "–", max_y_l
-    )
-    
-    x_label_long <- "Long decision period (0 = normal, 1 = too long)"
-    
-    plot_long_reg <- ggplot2::ggplot(
-      pred_long,
-      ggplot2::aes(x = x, y = predicted)
-    ) +
-      ggplot2::geom_line(size = 1.5, color = "lightblue") +
-      ggplot2::geom_ribbon(
-        ggplot2::aes(ymin = conf.low, ymax = conf.high),
-        alpha = 0.2
-      ) +
-      ggplot2::labs(
-        title    = "Predicted probability of single bidding\nby length of decision period",
-        subtitle = "Controls: buyer type, tender year; cluster-robust SEs by buyer",
-        x        = x_label_long,
-        y        = "Predicted probability",
-        caption  = caption_long
-      ) +
-      ggplot2::theme_minimal(base_size = 20) +
-      ggplot2::scale_y_continuous(labels = scales::percent_format())
+    # Build sensitivity bundle
+    if (!is.null(specs_long) && nrow(specs_long) > 0) {
+      sensitivity_long <- build_sensitivity_bundle(specs_long)
+      
+      # Print sensitivity
+      message("\n--- LONG DECISION PERIOD Sensitivity (", country_code, ") ---")
+      print(sensitivity_long$overall)
+      print(sensitivity_long$sign)
+      print(sensitivity_long$by_fe)
+      print(sensitivity_long$by_cluster)
+      print(sensitivity_long$by_controls)
+      print(sensitivity_long$classes)
+      print(sensitivity_long$top_cells)
+      
+      # Pick best model
+      best_row_long <- pick_best_model(
+        specs_long,
+        require_positive = TRUE,
+        p_max = 0.10,
+        strength_col = "effect_strength"
+      )
+      
+      if (!is.null(best_row_long)) {
+        # Refit best model
+        fe_part <- make_fe_part(best_row_long$fe)
+        cl_fml <- make_cluster(best_row_long$cluster)
+        
+        rhs_terms <- switch(
+          best_row_long$controls,
+          "x_only" = c("long_decision_period"),
+          "base" = c("long_decision_period", "buyer_buyertype", "tender_proceduretype")
+        )
+        rhs_terms <- rhs_terms[rhs_terms %in% names(reg_long)]
+        rhs <- paste(rhs_terms, collapse = " + ")
+        fml <- stats::as.formula(paste0("ind_corr_binary ~ ", rhs, " | ", fe_part))
+        
+        model_long_glm <- fixest::feglm(
+          fml,
+          family = quasibinomial(link = "logit"),
+          data = reg_long,
+          cluster = cl_fml
+        )
+        
+        pred_long <- tryCatch(
+          ggeffects::ggpredict(model_long_glm, terms = "long_decision_period"),
+          error = function(e) NULL
+        )
+        
+        if (!is.null(pred_long)) {
+          n_long  <- nrow(reg_long)
+          min_y_l <- min(reg_long$tender_year, na.rm = TRUE)
+          max_y_l <- max(reg_long$tender_year, na.rm = TRUE)
+          caption_long <- paste0(
+            "Sample: N = ", n_long,
+            " tenders; years covered: ", min_y_l, "–", max_y_l,
+            ". BEST model: FE=", best_row_long$fe,
+            ", Cluster=", best_row_long$cluster,
+            ", Controls=", best_row_long$controls
+          )
+          
+          x_label_long <- "Long decision period (0 = normal, 1 = too long)"
+          
+          plot_long_reg <- ggplot2::ggplot(
+            pred_long,
+            ggplot2::aes(x = x, y = predicted)
+          ) +
+            ggplot2::geom_line(size = 1.5, color = "lightblue") +
+            ggplot2::geom_ribbon(
+              ggplot2::aes(ymin = conf.low, ymax = conf.high),
+              alpha = 0.2
+            ) +
+            ggplot2::labs(
+              title    = "Predicted probability of single bidding\nby length of decision period",
+              subtitle = "(BEST Model Selected from Specification Testing)",
+              x        = x_label_long,
+              y        = "Predicted probability",
+              caption  = caption_long
+            ) +
+            ggplot2::theme_minimal(base_size = 20) +
+            ggplot2::scale_y_continuous(labels = scales::percent_format())
+        }
+      }
+    }
   } else {
-    model_long_glm <- NULL
-    plot_long_reg  <- NULL
+    message("No valid data for long decision period regression")
   }
   
   # ----------------------------------------------------------------------
@@ -1428,6 +1928,7 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
   # ----------------------------------------------------------------------
   results <- list(
     country_code               = country_code,
+    data                       = df,
     thresholds                 = thr,
     proc_share_data            = proc_share_data,
     tender_periods_open        = tender_periods_open,
@@ -1461,7 +1962,13 @@ run_admin_efficiency_pipeline <- function(df, country_code = "GEN", output_dir) 
     model_short_glm      = model_short_glm,
     model_long_glm       = model_long_glm,
     
-    summary_stats         = summary_stats
+    # specification testing results
+    specs_short          = specs_short,
+    sensitivity_short    = sensitivity_short,
+    specs_long           = specs_long,
+    sensitivity_long     = sensitivity_long,
+    
+    summary_stats        = summary_stats
   )
   
   invisible(results)
