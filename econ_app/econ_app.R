@@ -1,5 +1,5 @@
 # ========================================================================
-# ECONOMIC OUTCOMES SHINY APP
+# ECONOMIC OUTCOMES SHINY APP (WITH FILTERS)
 # ========================================================================
 # 
 # This app provides an interactive interface for analyzing economic outcomes
@@ -8,10 +8,12 @@
 #
 # Author: Generated based on econ_out_utils.R and econ_out_report.Rmd
 # Date: January 2026
+# Modified: Added filter functionality following admin_app pattern
 # ========================================================================
 
 library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
 library(DT)
 library(ggplot2)
 library(dplyr)
@@ -29,7 +31,7 @@ options(shiny.maxRequestSize = 1000*1024^2)
 # Try to source the utils file - show clear error if missing
 utils_loaded <- tryCatch({
   # Update this path to your actual econ_out_utils.R location
-  source("C:/Users/wb589991/OneDrive - WBG/Documents/procuR.github.io/src/utils/econ_out_utils.R")
+  source("econ_out_utils.R")
   TRUE
 }, error = function(e) {
   warning("Could not load econ_out_utils.R - ", e$message)
@@ -38,7 +40,7 @@ utils_loaded <- tryCatch({
 
 # Create placeholder functions if utils not loaded
 if (!utils_loaded) {
-  warning("Running in demo mode without utils. Please update the source() path on line 15.")
+  warning("Running in demo mode without utils. Please update the source() path on line 32.")
   
   # Placeholder function
   run_economic_efficiency_pipeline <- function(...) {
@@ -54,6 +56,8 @@ if (!utils_loaded) {
 # HELPER FUNCTIONS
 # ========================================================================
 
+`%ni%` <- Negate(`%in%`)
+
 # Helper to create filter caption text
 get_filter_caption <- function(filters) {
   if (is.null(filters)) return("")
@@ -64,7 +68,7 @@ get_filter_caption <- function(filters) {
     parts <- c(parts, sprintf("Years: %d-%d", filters$year[1], filters$year[2]))
   }
   
-  if (!is.null(filters$market) && length(filters$market) > 0) {
+  if (!is.null(filters$market) && length(filters$market) > 0 && "All" %ni% filters$market) {
     parts <- c(parts, sprintf("Markets: %s", paste(filters$market, collapse = ", ")))
   }
   
@@ -73,17 +77,44 @@ get_filter_caption <- function(filters) {
     parts <- c(parts, val_text)
   }
   
-  if (!is.null(filters$buyer_type) && length(filters$buyer_type) > 0) {
+  if (!is.null(filters$buyer_type) && length(filters$buyer_type) > 0 && "All" %ni% filters$buyer_type) {
     parts <- c(parts, sprintf("Buyer types: %s", paste(filters$buyer_type, collapse = ", ")))
   }
   
-  if (!is.null(filters$procedure_type) && length(filters$procedure_type) > 0) {
+  if (!is.null(filters$procedure_type) && length(filters$procedure_type) > 0 && "All" %ni% filters$procedure_type) {
     parts <- c(parts, sprintf("Procedures: %s", paste(filters$procedure_type, collapse = ", ")))
   }
   
   if (length(parts) == 0) return("")
   
   paste("Filters applied:", paste(parts, collapse = "; "))
+}
+
+# Helper function to describe active filters
+get_filter_description <- function(filter_list) {
+  parts <- c()
+  
+  if (!is.null(filter_list$year) && length(filter_list$year) == 2) {
+    parts <- c(parts, paste0("Years: ", filter_list$year[1], "-", filter_list$year[2]))
+  }
+  if (!is.null(filter_list$market) && length(filter_list$market) > 0 && "All" %ni% filter_list$market) {
+    parts <- c(parts, paste0("Markets: ", paste(filter_list$market, collapse = ", ")))
+  }
+  if (!is.null(filter_list$value) && length(filter_list$value) == 2) {
+    parts <- c(parts, paste0("Value range applied"))
+  }
+  if (!is.null(filter_list$buyer_type) && length(filter_list$buyer_type) > 0 && "All" %ni% filter_list$buyer_type) {
+    parts <- c(parts, paste0("Buyer types: ", paste(filter_list$buyer_type, collapse = ", ")))
+  }
+  if (!is.null(filter_list$procedure_type) && length(filter_list$procedure_type) > 0 && "All" %ni% filter_list$procedure_type) {
+    parts <- c(parts, paste0("Procedures: ", paste(filter_list$procedure_type, collapse = ", ")))
+  }
+  
+  if (length(parts) == 0) {
+    return("No filters applied")
+  } else {
+    return(paste(parts, collapse = "; "))
+  }
 }
 
 # Filter data based on user selections
@@ -98,8 +129,8 @@ filter_data <- function(df, year_range = NULL, market = NULL, value_range = NULL
       filter(tender_year >= year_range[1] & tender_year <= year_range[2])
   }
   
-  # Market filter  
-  if (!is.null(market) && "cpv_cluster" %in% names(df)) {
+  # Market filter (using cpv_cluster column added by pipeline)
+  if (!is.null(market) && length(market) > 0 && "All" %ni% market && "cpv_cluster" %in% names(df)) {
     filtered <- filtered %>%
       filter(cpv_cluster %in% market)
   }
@@ -107,18 +138,19 @@ filter_data <- function(df, year_range = NULL, market = NULL, value_range = NULL
   # Value filter
   if (!is.null(value_range) && "lot_estimatedprice" %in% names(df)) {
     filtered <- filtered %>%
+      filter(!is.na(lot_estimatedprice)) %>%
       filter(lot_estimatedprice >= value_range[1] * value_divisor &
                lot_estimatedprice <= value_range[2] * value_divisor)
   }
   
   # Buyer type filter
-  if (!is.null(buyer_type) && "buyer_buyertype" %in% names(df)) {
+  if (!is.null(buyer_type) && length(buyer_type) > 0 && "All" %ni% buyer_type && "buyer_buyertype" %in% names(df)) {
     filtered <- filtered %>%
       filter(buyer_buyertype %in% buyer_type)
   }
   
   # Procedure type filter
-  if (!is.null(procedure_type) && "tender_proceduretype" %in% names(df)) {
+  if (!is.null(procedure_type) && length(procedure_type) > 0 && "All" %ni% procedure_type && "tender_proceduretype" %in% names(df)) {
     filtered <- filtered %>%
       filter(tender_proceduretype %in% procedure_type)
   }
@@ -216,7 +248,7 @@ if (!is.null(filtered_analysis$market_size_av)) {
 
 ### New vs Repeat Suppliers
 
-This figure shows how supplier participation evolves over time within markets: new entrants versus repeat suppliers. A healthy level of new entry can indicate openness and contestability, while very low entry may suggest barriers or stable incumbent dominance.
+This figure illustrates the entrance dynamics across CPV markets and years, separating contracts awarded to new suppliers vs. those given to repeat suppliers. High volatility with many new entrants may signal competitive contestability, while heavy reliance on repeat suppliers suggests stable but potentially closed markets.
 
 ```{r fig.height=10}
 if (!is.null(filtered_analysis$suppliers_entrance)) {
@@ -226,7 +258,7 @@ if (!is.null(filtered_analysis$suppliers_entrance)) {
 
 ### Unique Suppliers Over Time
 
-This chart tracks how many distinct suppliers participate over time, by market. Growth can indicate expanding competition or improved access; decline can signal consolidation or weakening supplier interest.
+This chart tracks how many distinct suppliers participate in each market-year combination. A declining trend in unique suppliers may indicate market consolidation or reduced entry, while an increasing trend suggests more competitive openness.
 
 ```{r fig.height=10}
 if (!is.null(filtered_analysis$unique_supp)) {
@@ -240,13 +272,13 @@ if (!is.null(filtered_analysis$unique_supp)) {
 
 ## Are buyers able to choose from a variety of market offerings?
 
-These network visualizations show who buys from whom within selected CPV markets, shown by year. Dense networks with many connections typically reflect broad participation and diversified contracting relationships. Star-like patterns can indicate concentration or strong central actors.
+This section uses network diagrams to visualize the connections between buyers and suppliers in selected CPV markets. Dense, well-connected networks suggest diverse sourcing opportunities, while star-shaped networks around a single supplier or small cliques may indicate limited alternatives for buyers.
 
 ```{r fig.height=12}
 if (!is.null(filtered_analysis$network_plots) && length(filtered_analysis$network_plots) > 0) {
-  for(i in seq_along(filtered_analysis$network_plots)) {
-    if (!is.null(filtered_analysis$network_plots[[i]])) {
-      print(filtered_analysis$network_plots[[i]])
+  for (plot in filtered_analysis$network_plots) {
+    if (!is.null(plot)) {
+      print(plot)
     }
   }
 }
@@ -260,7 +292,7 @@ if (!is.null(filtered_analysis$network_plots) && length(filtered_analysis$networ
 
 ### Density of Relative Prices
 
-This plot shows how contract prices compare to their corresponding estimates across tenders. Mass concentrated near 1 suggests estimates broadly align with contracted prices. A heavy right tail indicates cases where contract prices exceed estimates more often or more strongly.
+This plot shows how contract prices compare to their corresponding estimates. Values below 1 indicate savings relative to the estimate, while values above 1 indicate overruns. The shape of the distribution reveals whether most contracts come in on budget, below budget, or above budget.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$rel_tot)) {
@@ -270,7 +302,7 @@ if (!is.null(filtered_analysis$rel_tot)) {
 
 ### Relative Prices Over Time
 
-This figure shows how the contract-to-estimate ratio changes over time. Look for widening spread (greater variability) or upward shifts (contracting increasingly above estimates).
+This figure shows how the contract-to-estimate ratio changes over time. An upward trend may signal inflationary pressures or worsening estimation accuracy. A downward trend may reflect improved cost control or more conservative initial estimates.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$rel_year)) {
@@ -280,7 +312,7 @@ if (!is.null(filtered_analysis$rel_year)) {
 
 ### Top Markets by Relative Prices
 
-This figure highlights the markets where contracted prices tend to be highest relative to estimates. It is useful for prioritizing which sectors may deserve deeper review of cost estimation and price formation.
+This chart highlights the markets where contracted prices tend to be highest relative to estimates. Consistent overruns in certain markets may point to chronic underestimation, unique market conditions, or pricing challenges.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$rel_10)) {
@@ -290,7 +322,7 @@ if (!is.null(filtered_analysis$rel_10)) {
 
 ### Top Buyers by Relative Prices
 
-This chart compares buyers by how high their contracted prices tend to be relative to estimates. It can help identify institutions that consistently contract above estimates and may require targeted support or scrutiny.
+This chart identifies specific buyers whose contracted prices tend to be highest relative to estimates. Buyers with persistent overruns may face capacity constraints, market power issues, or estimation difficulties that warrant further investigation.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$rel_buy)) {
@@ -306,7 +338,7 @@ if (!is.null(filtered_analysis$rel_buy)) {
 
 ### Single-Bid Share by Procedure
 
-This chart shows how often tenders receive only one bid across different procedure types. Higher single-bid shares can indicate weaker competition, barriers to entry, or procedures that are less attractive to suppliers.
+This chart breaks down single-bid incidence by procedure type. Direct awards and negotiated procedures without publication naturally have higher single-bid rates, but high single-bid rates in open or restricted procedures may signal barriers to competition.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$single_bid_by_procedure)) {
@@ -314,9 +346,9 @@ if (!is.null(filtered_analysis$single_bid_by_procedure)) {
 }
 ```
 
-### Single-Bid Shares by Market × Procedure × Value
+### Single-Bid by Market × Procedure × Value
 
-This plot focuses on the CPV clusters with the highest overall single-bid incidence. Within those markets, it shows how single-bid outcomes vary by procedure type and contract value bins.
+This advanced visualization combines market, procedure, and value dimensions to identify specific contexts where single bidding is most prevalent. Look for patterns where certain procedure-market-value combinations consistently attract only one bidder.
 
 ```{r fig.height=8}
 if (!is.null(filtered_analysis$single_bid_market_procedure_price_top)) {
@@ -326,7 +358,7 @@ if (!is.null(filtered_analysis$single_bid_market_procedure_price_top)) {
 
 ### Single-Bid Share by Contract Value
 
-This figure shows whether single bidding is more common for smaller or larger contracts. High single-bid shares at high values are typically more concerning, as they affect major spending decisions.
+This plot shows how single-bid incidence varies by contract size. Higher single-bid rates in large-value contracts may reflect supplier capacity limitations, while high rates in small contracts may suggest lack of interest or excessive administrative burden.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$single_bid_by_price)) {
@@ -334,9 +366,9 @@ if (!is.null(filtered_analysis$single_bid_by_price)) {
 }
 ```
 
-### Single-Bid Share by Value × Procedure
+### Single-Bid by Value × Procedure
 
-This chart combines contract value bins with procedure types to show where single bidding is most prevalent.
+This chart combines contract value and procedure type to show how single-bid incidence varies across these two dimensions. It helps identify whether single bidding is driven more by procedure choice or contract characteristics.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$single_bid_by_price_and_procedure)) {
@@ -344,9 +376,9 @@ if (!is.null(filtered_analysis$single_bid_by_price_and_procedure)) {
 }
 ```
 
-### Single-Bid Share by Buyer Group
+### Single-Bid by Buyer Group
 
-This figure shows which buyer types experience the most single-bid outcomes, which can help target capacity building or procedural improvements.
+This chart shows single-bid rates across different buyer types. Variations by buyer group may reflect differences in capacity, market power, or procurement practices across organizational types.
 
 ```{r fig.height=7}
 if (!is.null(filtered_analysis$single_bid_by_buyer_group)) {
@@ -775,6 +807,33 @@ ui <- dashboardPage(
         tabName = "data_overview",
         h2("Data Overview"),
         
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_overview")),
+              column(2, uiOutput("market_filter_overview")),
+              column(2, uiOutput("value_filter_overview")),
+              column(3, uiOutput("buyer_type_filter_overview")),
+              column(3, uiOutput("procedure_type_filter_overview"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_overview", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_overview", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_overview", inline = TRUE)
+              )
+            )
+          )
+        ),
+        
         fluidRow(
           valueBoxOutput("n_contracts", width = 3),
           valueBoxOutput("n_buyers", width = 3),
@@ -801,21 +860,46 @@ ui <- dashboardPage(
         
         fluidRow(
           box(
-            title = "Summary Statistics",
+            title = "Contract Value Distribution by Year",
             width = 12,
             solidHeader = TRUE,
             status = "info",
-            DT::dataTableOutput("summary_table")
+            plotOutput("value_by_year_plot", height = "400px")
           )
         )
       ),
-      
-      # Market Sizing Tab - WILL CONTINUE IN NEXT MESSAGE DUE TO LENGTH
       
       # Market Sizing Tab
       tabItem(
         tabName = "market_sizing",
         h2("Market Sizing Analysis"),
+        
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_market")),
+              column(2, uiOutput("market_filter_market")),
+              column(2, uiOutput("value_filter_market")),
+              column(3, uiOutput("buyer_type_filter_market")),
+              column(3, uiOutput("procedure_type_filter_market"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_market", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_market", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_market", inline = TRUE)
+              )
+            )
+          )
+        ),
         
         div(class = "question-header",
             "What is the overall market composition?"
@@ -850,7 +934,7 @@ ui <- dashboardPage(
             status = "primary",
             div(class = "description-box",
                 "This chart shows where the money is concentrated across CPV markets. 
-                A small number of very large markets suggests concentration of budget and potentially higher strategic importance."
+                A small number of very large markets suggests concentration of budget."
             ),
             plotOutput("market_size_v_plot", height = "600px"),
             downloadButton("download_market_size_v", "Download Figure", class = "download-btn btn-sm")
@@ -864,8 +948,7 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             status = "primary",
             div(class = "description-box",
-                "This plot combines volume and typical contract size to show how markets differ in structure. 
-                Markets with many contracts but low average value reflect frequent small purchases."
+                "This plot combines volume and typical contract size to show how markets differ in structure."
             ),
             plotOutput("market_size_av_plot", height = "600px"),
             downloadButton("download_market_size_av", "Download Figure", class = "download-btn btn-sm")
@@ -876,16 +959,37 @@ ui <- dashboardPage(
       # Supplier Dynamics Tab
       tabItem(
         tabName = "supplier_dynamics",
-        h2("Supplier Dynamics"),
+        h2("Supplier Dynamics Analysis"),
+        
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_supplier")),
+              column(2, uiOutput("market_filter_supplier")),
+              column(2, uiOutput("value_filter_supplier")),
+              column(3, uiOutput("buyer_type_filter_supplier")),
+              column(3, uiOutput("procedure_type_filter_supplier"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_supplier", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_supplier", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_supplier", inline = TRUE)
+              )
+            )
+          )
+        ),
         
         div(class = "question-header",
             "How volatile are the markets in terms of new vs old suppliers?"
-        ),
-        
-        div(class = "description-box",
-            p("Supplier dynamics tracks how supplier participation evolves over time. 
-              High entry rates can signal market openness, while low entry may indicate barriers. 
-              The balance between new and repeat suppliers reflects market contestability.")
         ),
         
         fluidRow(
@@ -893,10 +997,9 @@ ui <- dashboardPage(
             title = "New vs Repeat Suppliers",
             width = 12,
             solidHeader = TRUE,
-            status = "success",
+            status = "primary",
             div(class = "description-box",
-                "This figure shows how supplier participation evolves over time within markets: new entrants versus repeat suppliers. 
-                A healthy level of new entry can indicate openness and contestability."
+                "This figure shows how supplier participation evolves over time within markets."
             ),
             plotOutput("suppliers_entrance_plot", height = "800px"),
             downloadButton("download_suppliers_entrance", "Download Figure", class = "download-btn btn-sm")
@@ -908,10 +1011,9 @@ ui <- dashboardPage(
             title = "Unique Suppliers Over Time",
             width = 12,
             solidHeader = TRUE,
-            status = "success",
+            status = "primary",
             div(class = "description-box",
-                "This chart tracks how many distinct suppliers participate over time, by market. 
-                Growth can indicate expanding competition or improved access; decline can signal consolidation."
+                "This chart tracks how many distinct suppliers participate in each market-year combination."
             ),
             plotOutput("unique_supp_plot", height = "800px"),
             downloadButton("download_unique_supp", "Download Figure", class = "download-btn btn-sm")
@@ -924,13 +1026,35 @@ ui <- dashboardPage(
         tabName = "networks",
         h2("Buyer-Supplier Networks"),
         
-        div(class = "question-header",
-            "Are buyers able to choose from a variety of market offerings?"
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_network")),
+              column(2, uiOutput("market_filter_network")),
+              column(2, uiOutput("value_filter_network")),
+              column(3, uiOutput("buyer_type_filter_network")),
+              column(3, uiOutput("procedure_type_filter_network"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_network", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_network", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_network", inline = TRUE)
+              )
+            )
+          )
         ),
         
-        div(class = "description-box",
-            p("Network visualizations show the structure of buyer-supplier relationships within specific markets. 
-              Dense networks indicate diversified participation, while star patterns suggest concentration around key actors.")
+        div(class = "question-header",
+            "Are buyers able to choose from a variety of market offerings?"
         ),
         
         fluidRow(
@@ -938,10 +1062,9 @@ ui <- dashboardPage(
             title = "Network Visualizations",
             width = 12,
             solidHeader = TRUE,
-            status = "warning",
+            status = "primary",
             div(class = "description-box",
-                "These network visualizations show who buys from whom within selected CPV markets. 
-                Dense networks with many connections reflect broad participation and diversified contracting relationships."
+                "These network diagrams visualize buyer-supplier relationships in selected CPV markets."
             ),
             uiOutput("network_plots_ui")
           )
@@ -953,38 +1076,61 @@ ui <- dashboardPage(
         tabName = "relative_prices",
         h2("Relative Price Analysis"),
         
-        div(class = "question-header",
-            "Are there price savings or price overruns prevailing?"
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_price")),
+              column(2, uiOutput("market_filter_price")),
+              column(2, uiOutput("value_filter_price")),
+              column(3, uiOutput("buyer_type_filter_price")),
+              column(3, uiOutput("procedure_type_filter_price"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_price", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_price", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_price", inline = TRUE)
+              )
+            )
+          )
         ),
         
-        div(class = "description-box",
-            p("Relative price analysis compares contract prices to estimated prices. 
-              Values near 1 indicate good cost estimation, while systematic deviations suggest estimation issues or price control challenges.")
+        div(class = "question-header",
+            "Are there price savings or price overruns prevailing?"
         ),
         
         fluidRow(
           box(
             title = "Density of Relative Prices",
-            width = 6,
+            width = 12,
             solidHeader = TRUE,
-            status = "info",
+            status = "primary",
             div(class = "description-box",
-                "This plot shows how contract prices compare to their estimates. 
-                Mass near 1 suggests good alignment; heavy tails indicate frequent deviations."
+                "This plot shows how contract prices compare to their corresponding estimates."
             ),
-            plotOutput("rel_tot_plot", height = "500px"),
+            plotOutput("rel_tot_plot", height = "600px"),
             downloadButton("download_rel_tot", "Download Figure", class = "download-btn btn-sm")
-          ),
+          )
+        ),
+        
+        fluidRow(
           box(
             title = "Relative Prices Over Time",
-            width = 6,
+            width = 12,
             solidHeader = TRUE,
-            status = "info",
+            status = "primary",
             div(class = "description-box",
-                "This figure shows how the contract-to-estimate ratio changes over time. 
-                Look for widening spread or upward shifts."
+                "This figure shows how the contract-to-estimate ratio changes over time."
             ),
-            plotOutput("rel_year_plot", height = "500px"),
+            plotOutput("rel_year_plot", height = "600px"),
             downloadButton("download_rel_year", "Download Figure", class = "download-btn btn-sm")
           )
         ),
@@ -994,11 +1140,7 @@ ui <- dashboardPage(
             title = "Top Markets by Relative Prices",
             width = 6,
             solidHeader = TRUE,
-            status = "info",
-            div(class = "description-box",
-                "Markets where contracted prices tend to be highest relative to estimates. 
-                Useful for prioritizing which sectors deserve deeper review."
-            ),
+            status = "primary",
             plotOutput("rel_10_plot", height = "500px"),
             downloadButton("download_rel_10", "Download Figure", class = "download-btn btn-sm")
           ),
@@ -1006,11 +1148,7 @@ ui <- dashboardPage(
             title = "Top Buyers by Relative Prices",
             width = 6,
             solidHeader = TRUE,
-            status = "info",
-            div(class = "description-box",
-                "Buyers whose contracted prices tend to be highest relative to estimates. 
-                Can help identify institutions requiring targeted support."
-            ),
+            status = "primary",
             plotOutput("rel_buy_plot", height = "500px"),
             downloadButton("download_rel_buy", "Download Figure", class = "download-btn btn-sm")
           )
@@ -1022,13 +1160,35 @@ ui <- dashboardPage(
         tabName = "competition",
         h2("Competition Analysis"),
         
-        div(class = "question-header",
-            "Is there high competition?"
+        # FILTERS BOX
+        fluidRow(
+          box(
+            title = "Filters",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            status = "info",
+            
+            fluidRow(
+              column(2, uiOutput("year_filter_competition")),
+              column(2, uiOutput("market_filter_competition")),
+              column(2, uiOutput("value_filter_competition")),
+              column(3, uiOutput("buyer_type_filter_competition")),
+              column(3, uiOutput("procedure_type_filter_competition"))
+            ),
+            
+            fluidRow(
+              column(12,
+                     actionButton("apply_filters_competition", "Apply Filters", icon = icon("filter"), class = "btn-primary"),
+                     actionButton("reset_filters_competition", "Reset Filters", icon = icon("undo"), class = "btn-warning"),
+                     textOutput("filter_status_competition", inline = TRUE)
+              )
+            )
+          )
         ),
         
-        div(class = "description-box",
-            p("Competition analysis examines single-bid incidence across different dimensions. 
-              High single-bid rates indicate weak competition and potential barriers to market entry.")
+        div(class = "question-header",
+            "Is there high competition?"
         ),
         
         fluidRow(
@@ -1036,25 +1196,23 @@ ui <- dashboardPage(
             title = "Single-Bid Share by Procedure",
             width = 12,
             solidHeader = TRUE,
-            status = "danger",
+            status = "primary",
             div(class = "description-box",
-                "This chart shows how often tenders receive only one bid across different procedure types. 
-                Higher shares indicate weaker competition or barriers to entry."
+                "This chart breaks down single-bid incidence by procedure type."
             ),
-            plotOutput("single_bid_procedure_plot", height = "500px"),
+            plotOutput("single_bid_procedure_plot", height = "600px"),
             downloadButton("download_single_bid_procedure", "Download Figure", class = "download-btn btn-sm")
           )
         ),
         
         fluidRow(
           box(
-            title = "Single-Bid by Market × Procedure × Value (Top Markets)",
+            title = "Single-Bid by Market × Procedure × Value",
             width = 12,
             solidHeader = TRUE,
-            status = "danger",
+            status = "primary",
             div(class = "description-box",
-                "This plot focuses on CPV clusters with highest single-bid incidence. 
-                Shows how single-bid outcomes vary by procedure type and contract value bins."
+                "This visualization combines market, procedure, and value dimensions."
             ),
             plotOutput("single_bid_market_proc_price_plot", height = "700px"),
             downloadButton("download_single_bid_market_proc_price", "Download Figure", class = "download-btn btn-sm")
@@ -1066,10 +1224,7 @@ ui <- dashboardPage(
             title = "Single-Bid Share by Contract Value",
             width = 6,
             solidHeader = TRUE,
-            status = "danger",
-            div(class = "description-box",
-                "Shows whether single bidding is more common for smaller or larger contracts."
-            ),
+            status = "primary",
             plotOutput("single_bid_price_plot", height = "500px"),
             downloadButton("download_single_bid_price", "Download Figure", class = "download-btn btn-sm")
           ),
@@ -1077,10 +1232,7 @@ ui <- dashboardPage(
             title = "Single-Bid by Value × Procedure",
             width = 6,
             solidHeader = TRUE,
-            status = "danger",
-            div(class = "description-box",
-                "Combines contract value bins with procedure types to show where single bidding is most prevalent."
-            ),
+            status = "primary",
             plotOutput("single_bid_price_proc_plot", height = "500px"),
             downloadButton("download_single_bid_price_proc", "Download Figure", class = "download-btn btn-sm")
           )
@@ -1088,13 +1240,10 @@ ui <- dashboardPage(
         
         fluidRow(
           box(
-            title = "Single-Bid Share by Buyer Group",
+            title = "Single-Bid by Buyer Group",
             width = 6,
             solidHeader = TRUE,
-            status = "danger",
-            div(class = "description-box",
-                "Shows which buyer types experience the most single-bid outcomes."
-            ),
+            status = "primary",
             plotOutput("single_bid_buyer_group_plot", height = "500px"),
             downloadButton("download_single_bid_buyer_group", "Download Figure", class = "download-btn btn-sm")
           ),
@@ -1102,10 +1251,7 @@ ui <- dashboardPage(
             title = "Top Buyers by Single-Bid Incidence",
             width = 6,
             solidHeader = TRUE,
-            status = "danger",
-            div(class = "description-box",
-                "Identifies specific buyers with the highest single-bid rates."
-            ),
+            status = "primary",
             plotOutput("top_buyers_single_bid_plot", height = "500px"),
             downloadButton("download_top_buyers_single_bid", "Download Figure", class = "download-btn btn-sm")
           )
@@ -1119,29 +1265,33 @@ ui <- dashboardPage(
         
         fluidRow(
           box(
-            title = "Generate Full Report",
-            width = 12,
+            title = "Complete Reports",
+            width = 6,
             solidHeader = TRUE,
             status = "primary",
-            
-            p("Generate a comprehensive report with all visualizations and analysis."),
-            
-            fluidRow(
-              column(6,
-                     downloadButton("download_pdf", "Download PDF Report", 
-                                    class = "btn-primary btn-lg", 
-                                    style = "width: 100%; margin-bottom: 10px;")
-              ),
-              column(6,
-                     downloadButton("download_word", "Download Word Report", 
-                                    class = "btn-info btn-lg", 
-                                    style = "width: 100%;")
-              )
-            ),
-            
-            hr(),
-            
-            verbatimTextOutput("export_status")
+            p("Generate comprehensive analysis reports."),
+            downloadButton("download_pdf", "Download PDF Report", class = "btn-primary btn-lg download-btn"),
+            br(), br(),
+            downloadButton("download_word", "Download Word Report", class = "btn-info btn-lg download-btn")
+          ),
+          box(
+            title = "All Figures",
+            width = 6,
+            solidHeader = TRUE,
+            status = "success",
+            p("Download all analysis figures as a ZIP file."),
+            downloadButton("download_all_figures", "Download All Figures (ZIP)", 
+                           class = "btn-success btn-lg download-btn")
+          )
+        ),
+        
+        fluidRow(
+          box(
+            title = "Export Status",
+            width = 12,
+            solidHeader = TRUE,
+            status = "info",
+            textOutput("export_status")
           )
         )
       )
@@ -1155,110 +1305,66 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
   
-  # Show system status
-  output$system_status_ui <- renderUI({
-    status_items <- list()
-    
-    # Check if utils loaded
-    if (exists("utils_loaded") && utils_loaded) {
-      status_items[[1]] <- tags$p(
-        icon("check-circle", class = "text-success"),
-        " Utils file loaded successfully"
-      )
-    } else {
-      status_items[[1]] <- tags$div(
-        icon("exclamation-triangle", class = "text-danger"),
-        tags$b(" Utils file not loaded!"),
-        tags$p("Please update line 15 in econ_outcomes_app.R to point to your econ_out_utils.R file."),
-        tags$p("Current working directory:", getwd())
-      )
-    }
-    
-    # Check required packages
-    required_pkgs <- c("shiny", "shinydashboard", "DT", "ggplot2", "dplyr", 
-                       "data.table", "scales", "officer", "flextable", "rmarkdown")
-    missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
-    
-    if (length(missing_pkgs) == 0) {
-      status_items[[2]] <- tags$p(
-        icon("check-circle", class = "text-success"),
-        " All required packages available"
-      )
-    } else {
-      status_items[[2]] <- tags$div(
-        icon("exclamation-triangle", class = "text-warning"),
-        " Missing packages: ", paste(missing_pkgs, collapse = ", "),
-        tags$p("Install with: install.packages(c('", paste(missing_pkgs, collapse = "', '"), "'))")
-      )
-    }
-    
-    do.call(tagList, status_items)
-  })
-  
-  # Reactive values to store results
+  # Reactive values
   results <- reactiveValues(
     data = NULL,
     analysis = NULL,
     filtered_data = NULL,
     filtered_analysis = NULL,
     country_code = NULL,
-    cpv_lookup = NULL
+    cpv_lookup = NULL,
+    value_divisor = 1
   )
   
-  # Data loading and analysis
+  filters <- reactiveValues(
+    overview = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL),
+    market = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL),
+    supplier = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL),
+    network = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL),
+    price = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL),
+    competition = list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+  )
+  
+  # System status
+  output$system_status_ui <- renderUI({
+    status_text <- paste0(
+      "Utils loaded: ", ifelse(utils_loaded, "✓ Yes", "✗ No"), "\n",
+      if (!utils_loaded) {
+        "⚠ Please update the source() path in the app file to load econ_out_utils.R"
+      } else {
+        "✓ Ready to analyze data"
+      }
+    )
+    
+    tags$pre(status_text)
+  })
+  
+  # ========================================================================
+  # DATA LOADING
+  # ========================================================================
+  
   observeEvent(input$run_analysis, {
     req(input$datafile, input$country_code)
     
-    # Check if utils are loaded
-    if (!exists("utils_loaded") || !utils_loaded) {
-      showNotification(
-        "Cannot run analysis: econ_out_utils.R not loaded. Please update the source() path in the app file.",
-        type = "error",
-        duration = NULL
-      )
-      output$analysis_status <- renderText({
-        "Error: econ_out_utils.R not loaded.\n\nPlease:\n1. Update line 15 in econ_outcomes_app.R\n2. Point it to your econ_out_utils.R file\n3. Restart the app"
-      })
-      return(NULL)
+    if (!utils_loaded) {
+      showNotification("Cannot run analysis: econ_out_utils.R not loaded", 
+                       type = "error", duration = NULL)
+      return()
     }
     
-    # Isolate the analysis in a separate process to prevent crashes
     withProgress(message = 'Loading data...', value = 0, {
+      incProgress(0.2, detail = "Reading file...")
       
       tryCatch({
-        incProgress(0.1, detail = "Reading main data file...")
+        df <- fread(
+          input$datafile$datapath,
+          keepLeadingZeros = TRUE,
+          encoding = "UTF-8",
+          stringsAsFactors = FALSE,
+          showProgress = FALSE,
+          na.strings = c("", "-", "NA")
+        )
         
-        # Read main data file with size limits
-        df <- tryCatch({
-          fread(
-            input$datafile$datapath,
-            keepLeadingZeros = TRUE,
-            encoding = "UTF-8",
-            stringsAsFactors = FALSE,
-            showProgress = FALSE,
-            na.strings = c("", "-", "NA"),
-            nrows = -1  # Read all rows but monitor
-          )
-        }, error = function(e) {
-          showNotification(paste("Error reading CSV:", e$message), type = "error")
-          return(NULL)
-        })
-        
-        if (is.null(df)) return(NULL)
-        
-        # Check data size
-        file_size_mb <- file.size(input$datafile$datapath) / 1024^2
-        if (file_size_mb > 500) {
-          showNotification(
-            paste0("Warning: Large file (", round(file_size_mb, 1), " MB). Analysis may take several minutes."),
-            type = "warning",
-            duration = 10
-          )
-        }
-        
-        incProgress(0.2, detail = paste("Loaded", nrow(df), "rows..."))
-        
-        # Remove duplicate columns
         dup_cols <- duplicated(names(df))
         if (any(dup_cols)) {
           df <- df[, !dup_cols, with = FALSE]
@@ -1266,177 +1372,433 @@ server <- function(input, output, session) {
         
         df <- as.data.frame(df)
         
-        incProgress(0.25, detail = "Loading CPV lookup...")
+        incProgress(0.3, detail = "Building CPV lookup...")
         
-        # Load CPV lookup if file uploaded
         cpv_lookup <- NULL
         if (!is.null(input$cpv_file)) {
-          cpv_lookup <- tryCatch({
-            cpv_data <- fread(input$cpv_file$datapath, showProgress = FALSE)
-            lookup <- build_cpv_lookup(cpv_data)
-            showNotification("CPV lookup loaded", type = "message", duration = 3)
-            lookup
+          tryCatch({
+            # Read the CPV file as a dataframe
+            cpv_table <- fread(input$cpv_file$datapath, encoding = "UTF-8", stringsAsFactors = FALSE)
+            
+            cat("CPV file loaded. Columns:", paste(names(cpv_table), collapse = ", "), "\n")
+            cat("First few rows:\n")
+            print(head(cpv_table, 3))
+            
+            # Try to detect column names
+            code_col <- NULL
+            label_col <- NULL
+            
+            # Look for CODE column
+            if ("CODE" %in% names(cpv_table)) {
+              code_col <- "CODE"
+            } else if ("code" %in% names(cpv_table)) {
+              code_col <- "code"
+            } else if ("cpv_code" %in% names(cpv_table)) {
+              code_col <- "cpv_code"
+            } else if ("CPV" %in% names(cpv_table)) {
+              code_col <- "CPV"
+            } else {
+              code_col <- names(cpv_table)[1]  # Use first column
+            }
+            
+            # Look for label column
+            if ("EN" %in% names(cpv_table)) {
+              label_col <- "EN"
+            } else if ("en" %in% names(cpv_table)) {
+              label_col <- "en"
+            } else if ("description" %in% names(cpv_table)) {
+              label_col <- "description"
+            } else if ("name" %in% names(cpv_table)) {
+              label_col <- "name"
+            } else if ("label" %in% names(cpv_table)) {
+              label_col <- "label"
+            } else {
+              label_col <- names(cpv_table)[2]  # Use second column
+            }
+            
+            cat("Using columns:", code_col, "(code) and", label_col, "(label)\n")
+            
+            # Call the build_cpv_lookup function
+            cpv_lookup <- build_cpv_lookup(cpv_table, code_col = code_col, label_col = label_col)
+            
+            cat("CPV lookup created with", nrow(cpv_lookup$cpv_2d), "2-digit entries and",
+                nrow(cpv_lookup$cpv_3d), "3-digit entries\n")
+            
+            showNotification(paste("CPV codes loaded:", nrow(cpv_lookup$cpv_2d), "2-digit codes"), 
+                             type = "message", duration = 3)
+            
           }, error = function(e) {
-            showNotification(
-              paste("CPV file could not be loaded:", e$message, "- continuing without CPV labels"), 
-              type = "warning", 
-              duration = 5
-            )
-            NULL
+            cat("Error loading CPV file:", e$message, "\n")
+            showNotification(paste("Could not load CPV file:", e$message), 
+                             type = "warning", duration = 5)
+            cpv_lookup <- NULL
           })
         }
         
-        country_code <- toupper(trimws(input$country_code))
+        # If no CPV lookup provided or loading failed, leave as NULL
+        # The pipeline will handle creating a default one
+        if (is.null(cpv_lookup)) {
+          cat("No CPV lookup provided, pipeline will use defaults\n")
+          showNotification("No CPV codes file - using defaults from data", 
+                           type = "message", duration = 3)
+        }
         
-        # Parse network CPV clusters - skip if checkbox is checked
-        network_clusters <- tryCatch({
-          if (input$skip_networks) {
-            character(0)  # Skip networks entirely
-          } else if (nchar(trimws(input$network_cpv)) > 0) {
-            trimws(strsplit(input$network_cpv, ",")[[1]])
-          } else {
-            character(0)  # Empty - skip networks
-          }
-        }, error = function(e) {
+        incProgress(0.4, detail = "Running analysis...")
+        
+        country_code <- toupper(input$country_code)
+        
+        network_cpv_list <- if (!input$skip_networks && nchar(input$network_cpv) > 0) {
+          as.character(unlist(strsplit(input$network_cpv, ",")))
+        } else {
           character(0)
-        })
+        }
         
-        incProgress(0.3, detail = "Starting analysis pipeline...")
-        
-        # Set memory-friendly options
-        old_options <- options(
-          expressions = 5000,  # Limit expression nesting
-          warn = 1             # Show warnings immediately
+        analysis_results <- run_economic_efficiency_pipeline(
+          df = df,
+          country_code = country_code,
+          output_dir = tempdir(),
+          cpv_lookup = cpv_lookup,
+          network_cpv_clusters = network_cpv_list
         )
-        on.exit(options(old_options), add = TRUE)
-        
-        # Run analysis with multiple safety layers
-        analysis_results <- tryCatch({
-          
-          # Try to run full pipeline
-          withCallingHandlers({
-            
-            incProgress(0.4, detail = "Processing data...")
-            
-            run_economic_efficiency_pipeline(
-              df = df,
-              country_code = country_code,
-              output_dir = tempdir(),
-              cpv_lookup = cpv_lookup,
-              network_cpv_clusters = network_clusters,
-              save_outputs = FALSE  # Don't save to disk
-            )
-            
-          }, warning = function(w) {
-            # Log warnings but continue
-            message("Pipeline warning: ", w$message)
-          })
-          
-        }, error = function(e) {
-          
-          # If pipeline fails, create minimal results
-          showNotification(
-            paste("Pipeline error:", e$message, "- Creating basic results only"), 
-            type = "error", 
-            duration = 10
-          )
-          
-          # Create minimal viable results object
-          list(
-            country_code = country_code,
-            df = df,
-            summary_stats = list(
-              n_obs_per_year = if ("tender_year" %in% names(df)) {
-                df %>% 
-                  group_by(tender_year) %>% 
-                  summarise(n_observations = n(), .groups = "drop") %>%
-                  as.data.frame()
-              } else NULL,
-              n_unique_buyers = if ("buyer_masterid" %in% names(df)) {
-                length(unique(df$buyer_masterid))
-              } else NULL,
-              n_unique_bidders = if ("bidder_masterid" %in% names(df)) {
-                length(unique(df$bidder_masterid))
-              } else NULL,
-              vars_present = names(df)[!grepl("^ind_", names(df))]
-            ),
-            # Set all plot objects to NULL
-            market_size_n = NULL,
-            market_size_v = NULL,
-            market_size_av = NULL,
-            suppliers_entrance = NULL,
-            unique_supp = NULL,
-            network_plots = list(),
-            rel_tot = NULL,
-            rel_year = NULL,
-            rel_10 = NULL,
-            rel_buy = NULL,
-            single_bid_by_procedure = NULL,
-            single_bid_market_procedure_price_top = NULL,
-            single_bid_by_price = NULL,
-            single_bid_by_price_and_procedure = NULL,
-            single_bid_by_buyer_group = NULL,
-            top_buyers_single_bid = NULL,
-            cpv_cluster_legend = if ("cpv_cluster" %in% names(df) && "cpv_category" %in% names(df)) {
-              df %>% 
-                select(cpv_cluster, cpv_category) %>% 
-                distinct() %>% 
-                arrange(cpv_cluster) %>%
-                as.data.frame()
-            } else NULL
-          )
-        })
         
         incProgress(0.9, detail = "Finalizing...")
         
-        # Force garbage collection to free memory
-        gc()
+        # The pipeline returns results but doesn't modify df
+        # We need to add tender_year and cpv_cluster to our stored data
+        df_processed <- df
         
-        # Store results
-        results$data <- df
+        # Add tender_year if not present
+        if (!"tender_year" %in% names(df_processed)) {
+          # Use the add_tender_year function from utils
+          if (exists("add_tender_year")) {
+            df_processed <- add_tender_year(df_processed)
+          } else {
+            # Fallback: extract from date columns
+            date_cols <- c("tender_publications_firstcallfortenderdate",
+                           "tender_awarddecisiondate", 
+                           "tender_biddeadline")
+            cols_present <- intersect(date_cols, names(df_processed))
+            if (length(cols_present) > 0) {
+              get_year <- function(x) substr(x, 1, 4)
+              year_vec <- NA
+              for (col in cols_present) {
+                if (is.na(year_vec[1])) {
+                  year_vec <- get_year(df_processed[[col]])
+                } else {
+                  year_vec <- ifelse(is.na(year_vec), get_year(df_processed[[col]]), year_vec)
+                }
+              }
+              df_processed$tender_year <- as.integer(year_vec)
+            }
+          }
+        }
+        
+        # Add cpv_cluster if not present
+        if (!"cpv_cluster" %in% names(df_processed) && "lot_productcode" %in% names(df_processed)) {
+          df_processed <- df_processed %>%
+            mutate(cpv_cluster = substr(as.character(lot_productcode), 1, 2))
+        }
+        
+        results$data <- df_processed
         results$analysis <- analysis_results
-        results$filtered_data <- df
+        results$filtered_data <- df_processed
         results$filtered_analysis <- analysis_results
         results$country_code <- country_code
         results$cpv_lookup <- cpv_lookup
-        
-        # Success message
-        n_plots <- sum(!sapply(analysis_results[c("market_size_n", "market_size_v", "market_size_av",
-                                                  "suppliers_entrance", "unique_supp",
-                                                  "rel_tot", "rel_year", "rel_10", "rel_buy",
-                                                  "single_bid_by_procedure", "single_bid_by_price")], 
-                               is.null))
         
         output$analysis_status <- renderText({
           paste0("✓ Analysis complete!\n",
                  "Country: ", country_code, "\n",
                  "Rows: ", formatC(nrow(df), format = "d", big.mark = ","), "\n",
-                 "Columns: ", ncol(df), "\n",
-                 "Plots generated: ", n_plots, "\n",
-                 "Networks: ", length(analysis_results$network_plots))
+                 "Columns: ", ncol(df))
         })
         
-        showNotification(
-          "Analysis complete! Navigate to other tabs to view results.", 
-          type = "message", 
-          duration = 5
-        )
+        showNotification("Analysis complete! Navigate to other tabs to view results.", 
+                         type = "message", duration = 5)
         
       }, error = function(e) {
-        # Catch-all error handler
         output$analysis_status <- renderText({
-          paste("Critical error:", e$message, "\n\nPlease try:\n",
-                "1. Using a smaller dataset\n",
-                "2. Checking data format\n",
-                "3. Verifying column names match expected format")
+          paste("Error:", e$message)
         })
-        showNotification(
-          paste("Critical error:", e$message), 
-          type = "error", 
-          duration = NULL
-        )
+        showNotification(paste("Error:", e$message), type = "error", duration = NULL)
       })
     })
+  })
+  
+  # ========================================================================
+  # FILTER UI GENERATION (ALL TABS)
+  # ========================================================================
+  
+  # Year filters
+  output$year_filter_overview <- output$year_filter_market <- 
+    output$year_filter_supplier <- output$year_filter_network <- 
+    output$year_filter_price <- output$year_filter_competition <- renderUI({
+      # Use filtered_data which has tender_year added by pipeline
+      req(results$filtered_data)
+      
+      if ("tender_year" %in% names(results$filtered_data)) {
+        years <- results$filtered_data$tender_year
+        years <- years[!is.na(years)]
+        
+        if (length(years) > 0) {
+          sliderInput("year_range", "Year Range:",
+                      min = min(years),
+                      max = max(years),
+                      value = c(min(years), max(years)),
+                      step = 1,
+                      sep = "")
+        }
+      } else {
+        p("Year data will be available after analysis runs")
+      }
+    })
+  
+  # Market filters (CPV clusters generated by pipeline)
+  output$market_filter_overview <- output$market_filter_market <- 
+    output$market_filter_supplier <- output$market_filter_network <- 
+    output$market_filter_price <- output$market_filter_competition <- renderUI({
+      # Use filtered_data which has cpv_cluster added by pipeline
+      req(results$filtered_data)
+      
+      if ("cpv_cluster" %in% names(results$filtered_data)) {
+        cpv_codes <- unique(results$filtered_data$cpv_cluster)
+        cpv_codes <- cpv_codes[!is.na(cpv_codes) & cpv_codes != ""]
+        cpv_codes <- sort(cpv_codes)
+        
+        if (length(cpv_codes) > 0) {
+          pickerInput("market_filter", "Market (CPV):",
+                      choices = c("All", cpv_codes),
+                      selected = "All",
+                      multiple = TRUE,
+                      options = list(`actions-box` = TRUE, `live-search` = TRUE))
+        }
+      } else {
+        p("Market data will be available after analysis runs")
+      }
+    })
+  
+  # Value filters
+  output$value_filter_overview <- output$value_filter_market <- 
+    output$value_filter_supplier <- output$value_filter_network <- 
+    output$value_filter_price <- output$value_filter_competition <- renderUI({
+      req(results$filtered_data)
+      
+      if ("lot_estimatedprice" %in% names(results$filtered_data)) {
+        prices <- results$filtered_data$lot_estimatedprice
+        prices <- prices[!is.na(prices) & prices > 0]
+        
+        if (length(prices) > 0) {
+          min_price <- min(prices)
+          max_price <- max(prices)
+          
+          # Determine scale
+          if (max_price > 1000000) {
+            results$value_divisor <- 1000000
+            label_text <- "Value Range (Millions):"
+          } else if (max_price > 1000) {
+            results$value_divisor <- 1000
+            label_text <- "Value Range (Thousands):"
+          } else {
+            results$value_divisor <- 1
+            label_text <- "Value Range:"
+          }
+          
+          sliderInput("value_range", label_text,
+                      min = round(min_price / results$value_divisor, 2),
+                      max = round(max_price / results$value_divisor, 2),
+                      value = c(round(min_price / results$value_divisor, 2),
+                                round(max_price / results$value_divisor, 2)),
+                      step = round((max_price - min_price) / results$value_divisor / 100, 2))
+        }
+      }
+    })
+  
+  # Buyer type filters
+  output$buyer_type_filter_overview <- output$buyer_type_filter_market <- 
+    output$buyer_type_filter_supplier <- output$buyer_type_filter_network <- 
+    output$buyer_type_filter_price <- output$buyer_type_filter_competition <- renderUI({
+      req(results$filtered_data)
+      
+      if ("buyer_buyertype" %in% names(results$filtered_data)) {
+        buyer_types <- unique(results$filtered_data$buyer_buyertype)
+        buyer_types <- buyer_types[!is.na(buyer_types)]
+        buyer_types <- sort(buyer_types)
+        
+        if (length(buyer_types) > 0) {
+          pickerInput("buyer_type_filter", "Buyer Type:",
+                      choices = c("All", buyer_types),
+                      selected = "All",
+                      multiple = TRUE,
+                      options = list(`actions-box` = TRUE))
+        }
+      }
+    })
+  
+  # Procedure type filters
+  output$procedure_type_filter_overview <- output$procedure_type_filter_market <- 
+    output$procedure_type_filter_supplier <- output$procedure_type_filter_network <- 
+    output$procedure_type_filter_price <- output$procedure_type_filter_competition <- renderUI({
+      req(results$filtered_data)
+      
+      if ("tender_proceduretype" %in% names(results$filtered_data)) {
+        proc_types <- unique(results$filtered_data$tender_proceduretype)
+        proc_types <- proc_types[!is.na(proc_types)]
+        proc_types <- sort(proc_types)
+        
+        if (length(proc_types) > 0) {
+          pickerInput("procedure_type_filter", "Procedure Type:",
+                      choices = c("All", proc_types),
+                      selected = "All",
+                      multiple = TRUE,
+                      options = list(`actions-box` = TRUE, `live-search` = TRUE))
+        }
+      }
+    })
+  
+  # ========================================================================
+  # FILTER APPLICATION (SEPARATE FOR EACH TAB)
+  # ========================================================================
+  
+  # Helper to apply filters for a tab
+  apply_tab_filters <- function(tab_name) {
+    req(results$filtered_data, results$filtered_analysis)
+    
+    current_filters <- list(
+      year = input$year_range,
+      market = input$market_filter,
+      value = input$value_range,
+      buyer_type = input$buyer_type_filter,
+      procedure_type = input$procedure_type_filter
+    )
+    
+    # Store filters for this tab
+    if (tab_name == "overview") filters$overview <- current_filters
+    else if (tab_name == "market") filters$market <- current_filters
+    else if (tab_name == "supplier") filters$supplier <- current_filters
+    else if (tab_name == "network") filters$network <- current_filters
+    else if (tab_name == "price") filters$price <- current_filters
+    else if (tab_name == "competition") filters$competition <- current_filters
+    
+    # Apply filters to the already-processed data (which has tender_year and cpv_cluster)
+    # Use results$data which has been processed by the initial pipeline run
+    base_data <- if (!is.null(results$data) && 
+                     "tender_year" %in% names(results$data) && 
+                     "cpv_cluster" %in% names(results$data)) {
+      results$data
+    } else {
+      # If base data doesn't have these columns, use filtered_data
+      results$filtered_data
+    }
+    
+    filtered <- filter_data(
+      df = base_data,
+      year_range = current_filters$year,
+      market = current_filters$market,
+      value_range = current_filters$value,
+      buyer_type = current_filters$buyer_type,
+      procedure_type = current_filters$procedure_type,
+      value_divisor = results$value_divisor
+    )
+    
+    # Re-run analysis on filtered data
+    withProgress(message = 'Applying filters...', value = 0, {
+      incProgress(0.5, detail = "Re-analyzing data...")
+      
+      tryCatch({
+        filtered_analysis <- run_economic_efficiency_pipeline(
+          df = filtered,
+          country_code = results$country_code,
+          output_dir = tempdir(),
+          cpv_lookup = results$cpv_lookup,
+          network_cpv_clusters = character(0)  # Skip networks on filtered data for speed
+        )
+        
+        results$filtered_data <- filtered
+        results$filtered_analysis <- filtered_analysis
+        
+        showNotification(paste("Filters applied:", nrow(filtered), "contracts"), 
+                         type = "message", duration = 3)
+      }, error = function(e) {
+        showNotification(paste("Error applying filters:", e$message), 
+                         type = "error", duration = 5)
+      })
+    })
+  }
+  
+  # Apply filter observers
+  observeEvent(input$apply_filters_overview, { apply_tab_filters("overview") })
+  observeEvent(input$apply_filters_market, { apply_tab_filters("market") })
+  observeEvent(input$apply_filters_supplier, { apply_tab_filters("supplier") })
+  observeEvent(input$apply_filters_network, { apply_tab_filters("network") })
+  observeEvent(input$apply_filters_price, { apply_tab_filters("price") })
+  observeEvent(input$apply_filters_competition, { apply_tab_filters("competition") })
+  
+  # Reset filter observers
+  observeEvent(input$reset_filters_overview, {
+    filters$overview <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  observeEvent(input$reset_filters_market, {
+    filters$market <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  observeEvent(input$reset_filters_supplier, {
+    filters$supplier <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  observeEvent(input$reset_filters_network, {
+    filters$network <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  observeEvent(input$reset_filters_price, {
+    filters$price <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  observeEvent(input$reset_filters_competition, {
+    filters$competition <- list(year = NULL, market = NULL, value = NULL, buyer_type = NULL, procedure_type = NULL)
+    results$filtered_data <- results$data
+    results$filtered_analysis <- results$analysis
+    showNotification("Filters reset", type = "message", duration = 2)
+  })
+  
+  # Filter status outputs
+  output$filter_status_overview <- renderText({
+    paste("  ", get_filter_description(filters$overview))
+  })
+  
+  output$filter_status_market <- renderText({
+    paste("  ", get_filter_description(filters$market))
+  })
+  
+  output$filter_status_supplier <- renderText({
+    paste("  ", get_filter_description(filters$supplier))
+  })
+  
+  output$filter_status_network <- renderText({
+    paste("  ", get_filter_description(filters$network))
+  })
+  
+  output$filter_status_price <- renderText({
+    paste("  ", get_filter_description(filters$price))
+  })
+  
+  output$filter_status_competition <- renderText({
+    paste("  ", get_filter_description(filters$competition))
   })
   
   # ========================================================================
@@ -1455,11 +1817,12 @@ server <- function(input, output, session) {
   
   output$n_buyers <- renderValueBox({
     req(results$filtered_data)
-    n <- if ("buyer_masterid" %in% names(results$filtered_data)) {
-      length(unique(results$filtered_data$buyer_masterid))
-    } else NA
+    df <- results$filtered_data
+    n_buyers <- if ("buyer_masterid" %in% names(df)) {
+      length(unique(df$buyer_masterid))
+    } else "N/A"
     valueBox(
-      formatC(n, format = "d", big.mark = ","),
+      formatC(n_buyers, format = "d", big.mark = ","),
       "Unique Buyers",
       icon = icon("building"),
       color = "green"
@@ -1468,11 +1831,12 @@ server <- function(input, output, session) {
   
   output$n_suppliers <- renderValueBox({
     req(results$filtered_data)
-    n <- if ("bidder_masterid" %in% names(results$filtered_data)) {
-      length(unique(results$filtered_data$bidder_masterid))
-    } else NA
+    df <- results$filtered_data
+    n_suppliers <- if ("bidder_masterid" %in% names(df)) {
+      length(unique(df$bidder_masterid))
+    } else "N/A"
     valueBox(
-      formatC(n, format = "d", big.mark = ","),
+      formatC(n_suppliers, format = "d", big.mark = ","),
       "Unique Suppliers",
       icon = icon("truck"),
       color = "yellow"
@@ -1481,11 +1845,18 @@ server <- function(input, output, session) {
   
   output$n_years <- renderValueBox({
     req(results$filtered_data)
-    n <- if ("tender_year" %in% names(results$filtered_data)) {
-      length(unique(results$filtered_data$tender_year[!is.na(results$filtered_data$tender_year)]))
+    df <- results$filtered_data
+    
+    years <- if ("tender_year" %in% names(df)) {
+      unique(df$tender_year[!is.na(df$tender_year)])
     } else NA
+    
+    year_range <- if (length(years) > 0) {
+      paste(min(years), "-", max(years))
+    } else "N/A"
+    
     valueBox(
-      n,
+      year_range,
       "Years Covered",
       icon = icon("calendar"),
       color = "red"
@@ -1493,63 +1864,110 @@ server <- function(input, output, session) {
   })
   
   output$contracts_year_plot <- renderPlot({
-    req(results$filtered_analysis$summary_stats$n_obs_per_year)
-    stats <- results$filtered_analysis$summary_stats$n_obs_per_year
+    req(results$filtered_data)
+    df <- results$filtered_data
     
-    ggplot(stats, aes(x = tender_year, y = n_observations)) +
-      geom_col(fill = "#3c8dbc") +
-      geom_text(aes(label = formatC(n_observations, format = "d", big.mark = ",")),
-                vjust = -0.5, size = 4) +
-      labs(x = "Year", y = "Number of Contracts", title = "Contracts per Year") +
-      theme_minimal(base_size = 14) +
-      scale_y_continuous(labels = scales::comma)
+    if ("tender_year" %in% names(df)) {
+      year_counts <- df %>%
+        group_by(tender_year) %>%
+        summarise(n = n()) %>%
+        ungroup()
+      
+      ggplot(year_counts, aes(x = tender_year, y = n)) +
+        geom_col(fill = "#3c8dbc") +
+        geom_text(aes(label = formatC(n, format = "d", big.mark = ",")),
+                  vjust = -0.5, size = 4) +
+        labs(x = "Year", y = "Number of Contracts", title = "Contracts per Year") +
+        theme_minimal(base_size = 14) +
+        scale_y_continuous(labels = scales::comma)
+    }
+  })
+  
+  output$value_by_year_plot <- renderPlot({
+    req(results$filtered_data)
+    df <- results$filtered_data
+    
+    if ("tender_year" %in% names(df) && "lot_estimatedprice" %in% names(df)) {
+      year_values <- df %>%
+        filter(!is.na(lot_estimatedprice) & lot_estimatedprice > 0) %>%
+        group_by(tender_year) %>%
+        summarise(
+          total_value = sum(lot_estimatedprice, na.rm = TRUE),
+          avg_value = mean(lot_estimatedprice, na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      # Determine scale for display
+      max_val <- max(year_values$total_value, na.rm = TRUE)
+      if (max_val > 1e9) {
+        year_values <- year_values %>%
+          mutate(total_value_display = total_value / 1e9)
+        y_label <- "Total Contract Value (Billions)"
+      } else if (max_val > 1e6) {
+        year_values <- year_values %>%
+          mutate(total_value_display = total_value / 1e6)
+        y_label <- "Total Contract Value (Millions)"
+      } else if (max_val > 1e3) {
+        year_values <- year_values %>%
+          mutate(total_value_display = total_value / 1e3)
+        y_label <- "Total Contract Value (Thousands)"
+      } else {
+        year_values <- year_values %>%
+          mutate(total_value_display = total_value)
+        y_label <- "Total Contract Value"
+      }
+      
+      ggplot(year_values, aes(x = tender_year, y = total_value_display)) +
+        geom_col(fill = "#00a65a") +
+        geom_text(aes(label = format(round(total_value_display, 1), big.mark = ",")),
+                  vjust = -0.5, size = 4) +
+        labs(x = "Year", y = y_label, 
+             title = "Total Contract Value by Year") +
+        theme_minimal(base_size = 14) +
+        scale_y_continuous(labels = scales::comma)
+    }
   })
   
   output$cpv_legend_table <- DT::renderDataTable({
-    req(results$filtered_analysis$cpv_cluster_legend)
-    
-    DT::datatable(
-      results$filtered_analysis$cpv_cluster_legend,
-      options = list(
-        pageLength = 10,
-        scrollX = TRUE,
-        dom = 'ftip'
-      ),
-      rownames = FALSE
-    )
+    # cpv_lookup is a list with $cpv_2d and $cpv_3d dataframes
+    if (!is.null(results$cpv_lookup) && is.list(results$cpv_lookup) && !is.null(results$cpv_lookup$cpv_2d)) {
+      cpv_2d_table <- results$cpv_lookup$cpv_2d
+      
+      # Rename columns for display
+      if ("cpv_cluster" %in% names(cpv_2d_table) && "cpv_category" %in% names(cpv_2d_table)) {
+        display_table <- cpv_2d_table %>%
+          rename(`CPV Code` = cpv_cluster, `Category` = cpv_category)
+      } else {
+        display_table <- cpv_2d_table
+      }
+      
+      datatable(display_table, 
+                options = list(pageLength = 10, scrollY = "350px", scrollCollapse = TRUE),
+                rownames = FALSE,
+                caption = "CPV 2-digit Market Definitions")
+      
+    } else if (!is.null(results$data) && "lot_productcode" %in% names(results$data)) {
+      # Create on-the-fly CPV legend from data
+      cpv_temp <- results$data %>%
+        mutate(cpv_2dig = substr(as.character(lot_productcode), 1, 2)) %>%
+        filter(!is.na(cpv_2dig) & cpv_2dig != "" & nchar(cpv_2dig) == 2) %>%
+        group_by(cpv_2dig) %>%
+        summarise(cpv_name = paste0("CPV ", cpv_2dig), 
+                  n_contracts = n(), .groups = "drop") %>%
+        arrange(cpv_2dig) %>%
+        rename(`CPV Code` = cpv_2dig, `Category` = cpv_name, `Contracts` = n_contracts)
+      
+      datatable(cpv_temp, 
+                options = list(pageLength = 10, scrollY = "350px", scrollCollapse = TRUE),
+                rownames = FALSE,
+                caption = "CPV codes extracted from data (no CPV file provided)")
+    } else {
+      datatable(data.frame(Message = "No CPV data available"), 
+                options = list(dom = 't'), 
+                rownames = FALSE)
+    }
   })
   
-  output$summary_table <- DT::renderDataTable({
-    req(results$filtered_analysis$summary_stats)
-    summ <- results$filtered_analysis$summary_stats
-    
-    summary_df <- data.frame(
-      Metric = character(),
-      Value = character(),
-      stringsAsFactors = FALSE
-    )
-    
-    if (!is.null(summ$n_unique_buyers)) {
-      summary_df <- rbind(summary_df, 
-                          data.frame(Metric = "Unique Buyers", 
-                                     Value = format(summ$n_unique_buyers, big.mark = ",")))
-    }
-    
-    if (!is.null(summ$n_unique_bidders)) {
-      summary_df <- rbind(summary_df,
-                          data.frame(Metric = "Unique Bidders",
-                                     Value = format(summ$n_unique_bidders, big.mark = ",")))
-    }
-    
-    DT::datatable(
-      summary_df,
-      options = list(
-        pageLength = 10,
-        dom = 't'
-      ),
-      rownames = FALSE
-    )
-  })
   
   # ========================================================================
   # MARKET SIZING OUTPUTS
@@ -1557,32 +1975,17 @@ server <- function(input, output, session) {
   
   output$market_size_n_plot <- renderPlot({
     req(results$filtered_analysis$market_size_n)
-    tryCatch({
-      results$filtered_analysis$market_size_n
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, paste("Error rendering plot:", e$message), cex = 1.2)
-    })
+    results$filtered_analysis$market_size_n
   })
   
   output$market_size_v_plot <- renderPlot({
     req(results$filtered_analysis$market_size_v)
-    tryCatch({
-      results$filtered_analysis$market_size_v
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, paste("Error rendering plot:", e$message), cex = 1.2)
-    })
+    results$filtered_analysis$market_size_v
   })
   
   output$market_size_av_plot <- renderPlot({
     req(results$filtered_analysis$market_size_av)
-    tryCatch({
-      results$filtered_analysis$market_size_av
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, paste("Error rendering plot:", e$message), cex = 1.2)
-    })
+    results$filtered_analysis$market_size_av
   })
   
   # ========================================================================
@@ -1591,22 +1994,12 @@ server <- function(input, output, session) {
   
   output$suppliers_entrance_plot <- renderPlot({
     req(results$filtered_analysis$suppliers_entrance)
-    tryCatch({
-      results$filtered_analysis$suppliers_entrance
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, paste("Error rendering plot:", e$message), cex = 1.2)
-    })
+    results$filtered_analysis$suppliers_entrance
   })
   
   output$unique_supp_plot <- renderPlot({
     req(results$filtered_analysis$unique_supp)
-    tryCatch({
-      results$filtered_analysis$unique_supp
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, paste("Error rendering plot:", e$message), cex = 1.2)
-    })
+    results$filtered_analysis$unique_supp
   })
   
   # ========================================================================
@@ -1614,37 +2007,24 @@ server <- function(input, output, session) {
   # ========================================================================
   
   output$network_plots_ui <- renderUI({
-    plots <- results$filtered_analysis$network_plots
+    req(results$filtered_analysis$network_plots)
     
-    if (is.null(plots) || length(plots) == 0) {
-      return(box(
-        width = 12,
-        p("No network plots available for this dataset. This may be because:"),
-        tags$ul(
-          tags$li("Required columns (buyer_masterid, bidder_masterid, cpv_cluster) are missing"),
-          tags$li("The specified CPV clusters don't exist in the data"),
-          tags$li("There is insufficient data to create meaningful networks")
-        )
-      ))
+    if (length(results$filtered_analysis$network_plots) == 0) {
+      return(p("No network plots available. Networks may have been skipped or no data matches criteria."))
     }
     
-    plot_outputs <- lapply(seq_along(plots), function(i) {
-      plot_name <- names(plots)[i]
-      output_id <- paste0("network_plot_", i)
-      
-      output[[output_id]] <- renderPlot({
-        tryCatch({
-          plots[[i]]
-        }, error = function(e) {
-          plot.new()
-          text(0.5, 0.5, paste("Error rendering network plot:", e$message), cex = 1.2)
-        })
+    plot_outputs <- lapply(seq_along(results$filtered_analysis$network_plots), function(i) {
+      plot_name <- paste0("network_plot_", i)
+      output[[plot_name]] <- renderPlot({
+        results$filtered_analysis$network_plots[[i]]
       }, height = 800)
       
-      tagList(
-        h4(plot_name),
-        plotOutput(output_id, height = "800px"),
-        hr()
+      box(
+        title = names(results$filtered_analysis$network_plots)[i],
+        width = 12,
+        solidHeader = TRUE,
+        status = "primary",
+        plotOutput(plot_name, height = "800px")
       )
     })
     
@@ -1657,42 +2037,22 @@ server <- function(input, output, session) {
   
   output$rel_tot_plot <- renderPlot({
     req(results$filtered_analysis$rel_tot)
-    tryCatch({
-      results$filtered_analysis$rel_tot
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$rel_tot
   })
   
   output$rel_year_plot <- renderPlot({
     req(results$filtered_analysis$rel_year)
-    tryCatch({
-      results$filtered_analysis$rel_year
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$rel_year
   })
   
   output$rel_10_plot <- renderPlot({
     req(results$filtered_analysis$rel_10)
-    tryCatch({
-      results$filtered_analysis$rel_10
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$rel_10
   })
   
   output$rel_buy_plot <- renderPlot({
     req(results$filtered_analysis$rel_buy)
-    tryCatch({
-      results$filtered_analysis$rel_buy
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$rel_buy
   })
   
   # ========================================================================
@@ -1701,62 +2061,32 @@ server <- function(input, output, session) {
   
   output$single_bid_procedure_plot <- renderPlot({
     req(results$filtered_analysis$single_bid_by_procedure)
-    tryCatch({
-      results$filtered_analysis$single_bid_by_procedure
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$single_bid_by_procedure
   })
   
   output$single_bid_market_proc_price_plot <- renderPlot({
     req(results$filtered_analysis$single_bid_market_procedure_price_top)
-    tryCatch({
-      results$filtered_analysis$single_bid_market_procedure_price_top
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$single_bid_market_procedure_price_top
   })
   
   output$single_bid_price_plot <- renderPlot({
     req(results$filtered_analysis$single_bid_by_price)
-    tryCatch({
-      results$filtered_analysis$single_bid_by_price
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$single_bid_by_price
   })
   
   output$single_bid_price_proc_plot <- renderPlot({
     req(results$filtered_analysis$single_bid_by_price_and_procedure)
-    tryCatch({
-      results$filtered_analysis$single_bid_by_price_and_procedure
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$single_bid_by_price_and_procedure
   })
   
   output$single_bid_buyer_group_plot <- renderPlot({
     req(results$filtered_analysis$single_bid_by_buyer_group)
-    tryCatch({
-      results$filtered_analysis$single_bid_by_buyer_group
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$single_bid_by_buyer_group
   })
   
   output$top_buyers_single_bid_plot <- renderPlot({
     req(results$filtered_analysis$top_buyers_single_bid)
-    tryCatch({
-      results$filtered_analysis$top_buyers_single_bid
-    }, error = function(e) {
-      plot.new()
-      text(0.5, 0.5, "Plot not available", cex = 1.2)
-    })
+    results$filtered_analysis$top_buyers_single_bid
   })
   
   # ========================================================================
@@ -1937,6 +2267,95 @@ server <- function(input, output, session) {
         } else {
           output$export_status <- renderText("Error generating Word report. Check console for details.")
         }
+      })
+    }
+  )
+  
+  output$download_all_figures <- downloadHandler(
+    filename = function() {
+      paste0("all_figures_", results$country_code, "_", format(Sys.Date(), "%Y%m%d"), ".zip")
+    },
+    content = function(file) {
+      req(results$filtered_analysis)
+      
+      withProgress(message = 'Creating ZIP file...', value = 0, {
+        temp_dir <- tempfile()
+        dir.create(temp_dir)
+        
+        # List all plots with their names
+        plots <- list(
+          list(plot = results$filtered_analysis$market_size_n, name = "market_size_n", width = 10, height = 7),
+          list(plot = results$filtered_analysis$market_size_v, name = "market_size_v", width = 10, height = 7),
+          list(plot = results$filtered_analysis$market_size_av, name = "market_size_av", width = 10, height = 7),
+          list(plot = results$filtered_analysis$suppliers_entrance, name = "suppliers_entrance", width = 12, height = 10),
+          list(plot = results$filtered_analysis$unique_supp, name = "unique_supp", width = 12, height = 10),
+          list(plot = results$filtered_analysis$rel_tot, name = "rel_tot", width = 10, height = 7),
+          list(plot = results$filtered_analysis$rel_year, name = "rel_year", width = 10, height = 7),
+          list(plot = results$filtered_analysis$rel_10, name = "rel_10", width = 10, height = 7),
+          list(plot = results$filtered_analysis$rel_buy, name = "rel_buy", width = 10, height = 7),
+          list(plot = results$filtered_analysis$single_bid_by_procedure, name = "single_bid_procedure", width = 10, height = 7),
+          list(plot = results$filtered_analysis$single_bid_market_procedure_price_top, name = "single_bid_market_proc_price", width = 12, height = 8),
+          list(plot = results$filtered_analysis$single_bid_by_price, name = "single_bid_price", width = 10, height = 7),
+          list(plot = results$filtered_analysis$single_bid_by_price_and_procedure, name = "single_bid_price_proc", width = 10, height = 7),
+          list(plot = results$filtered_analysis$single_bid_by_buyer_group, name = "single_bid_buyer_group", width = 10, height = 7),
+          list(plot = results$filtered_analysis$top_buyers_single_bid, name = "top_buyers_single_bid", width = 10, height = 7)
+        )
+        
+        n_plots <- length(plots)
+        saved_count <- 0
+        
+        for (i in seq_along(plots)) {
+          incProgress(i/n_plots, detail = paste("Saving figure", i, "of", n_plots))
+          
+          if (!is.null(plots[[i]]$plot)) {
+            file_path <- file.path(temp_dir, paste0(plots[[i]]$name, "_", results$country_code, ".png"))
+            tryCatch({
+              ggsave(file_path, plots[[i]]$plot, 
+                     width = plots[[i]]$width, 
+                     height = plots[[i]]$height, 
+                     dpi = 300)
+              saved_count <- saved_count + 1
+            }, error = function(e) {
+              message("Could not save ", plots[[i]]$name, ": ", e$message)
+            })
+          }
+        }
+        
+        # Also save network plots if available
+        if (!is.null(results$filtered_analysis$network_plots) && 
+            length(results$filtered_analysis$network_plots) > 0) {
+          for (j in seq_along(results$filtered_analysis$network_plots)) {
+            if (!is.null(results$filtered_analysis$network_plots[[j]])) {
+              network_name <- names(results$filtered_analysis$network_plots)[j]
+              if (is.null(network_name) || network_name == "") {
+                network_name <- paste0("network_", j)
+              }
+              file_path <- file.path(temp_dir, paste0(network_name, "_", results$country_code, ".png"))
+              tryCatch({
+                ggsave(file_path, results$filtered_analysis$network_plots[[j]], 
+                       width = 12, height = 12, dpi = 300)
+                saved_count <- saved_count + 1
+              }, error = function(e) {
+                message("Could not save network plot ", j, ": ", e$message)
+              })
+            }
+          }
+        }
+        
+        # Create ZIP file
+        if (saved_count > 0) {
+          zip::zip(zipfile = file, 
+                   files = list.files(temp_dir, full.names = TRUE), 
+                   mode = "cherry-pick")
+          
+          output$export_status <- renderText(
+            paste0("Successfully saved ", saved_count, " figures to ZIP file!")
+          )
+        } else {
+          output$export_status <- renderText("No figures available to save.")
+        }
+        
+        unlink(temp_dir, recursive = TRUE)
       })
     }
   )
